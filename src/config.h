@@ -1,0 +1,3 @@
+#define BACKGROUND_COLOR 40,42,54
+#define UI_GAP 10
+#define FONT_SIZE 16

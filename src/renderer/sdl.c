@@ -1,5 +1,11 @@
+#include "../../includes/clay.h"
+#include "../config.h"
+#include "../renderer.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_pixels.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_video.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <stdio.h>
 
@@ -8,7 +14,6 @@ SDL_Renderer *renderer = NULL;
 TTF_Font *font = NULL;
 SDL_Texture *texture = NULL;
 
-void quit();
 bool initRenderer() {
   {
 
@@ -26,7 +31,8 @@ bool initRenderer() {
     }
 
     font = TTF_OpenFont(
-        "/home/theo/.local/share/fonts/FiraCodeNerdFont-Regular.ttf", 16);
+        "/home/theo/.local/share/fonts/FiraCodeNerdFont-Regular.ttf",
+        FONT_SIZE);
     if (!font) {
       SDL_Log("TTF_OpenFont failed: %s", SDL_GetError());
     }
@@ -44,49 +50,35 @@ bool initRenderer() {
       SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
     }
 
-
     return 0;
   }
 }
 
-bool renderFrame() {
-      bool shouldStop = false;
-      SDL_Event event;
-      while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_EVENT_QUIT)
-          shouldStop = true;
-        if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_Q)
-          shouldStop = true;
-      }
-
-      int w, h;
-      SDL_GetRenderOutputSize(renderer, &w, &h);
-      float tex_w, tex_h;
-      SDL_GetTextureSize(texture, &tex_w, &tex_h);
-      SDL_FRect dst = {.x = (w - tex_w) / 2.0f,
-                       .y = (h - tex_h) / 2.0f,
-                       .w = (float)tex_w,
-                       .h = (float)tex_h};
-
-      SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-      SDL_RenderClear(renderer);
-      SDL_RenderTexture(renderer, texture, NULL, &dst);
-      SDL_RenderPresent(renderer);
-      return shouldStop;
-  
+bool renderFrame(Clay_RenderCommandArray commands) {
+  bool shouldStop = false;
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    if (event.type == SDL_EVENT_QUIT)
+      shouldStop = true;
+    if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_Q)
+      shouldStop = true;
+  }
+  SDL_Clay_RenderClayCommands(
+      &(Clay_SDL3RendererData){.renderer = renderer, .fonts = &font},
+      &commands);
+  SDL_RenderPresent(renderer);
+  return shouldStop;
 }
 
-
 void quit() {
-    if (texture)
-      SDL_DestroyTexture(texture);
-    if (font)
-      TTF_CloseFont(font);
-    if (renderer)
-      SDL_DestroyRenderer(renderer);
-    if (window)
-      SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
-  
+  if (texture)
+    SDL_DestroyTexture(texture);
+  if (font)
+    TTF_CloseFont(font);
+  if (renderer)
+    SDL_DestroyRenderer(renderer);
+  if (window)
+    SDL_DestroyWindow(window);
+  TTF_Quit();
+  SDL_Quit();
 }

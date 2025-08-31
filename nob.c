@@ -1,6 +1,6 @@
 #include <strings.h>
 #define NOB_IMPLEMENTATION
-#include "nob.h"
+#include "includes/nob.h"
 
 int main(int argc, char **argv) {
   NOB_GO_REBUILD_URSELF(argc, argv);
@@ -16,10 +16,12 @@ int main(int argc, char **argv) {
     output = "dist/tests";
   } else {
     nob_cc_flags(&cmd);
-    nob_cc_inputs(&cmd, "src/main.c", "src/text_handling.c",
-                  "src/renderer/sdl.c");
+    // TODO: Async build
+    nob_cc_inputs(&cmd, "src/main.c", "src/layout.c", "src/text_handling.c",
+                  "src/renderer/sdl.c", "src/renderer/sdl_clay.c");
     nob_cmd_append(&cmd, "-lSDL3");
     nob_cmd_append(&cmd, "-lSDL3_ttf");
+    nob_cmd_append(&cmd, "-g");
   }
   nob_cc_output(&cmd, output);
 
