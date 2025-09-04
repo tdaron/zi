@@ -22,13 +22,12 @@ int main(int argc, char **argv) {
     nob_cmd_append(&cmd, "-lSDL3");
     nob_cmd_append(&cmd, "-lSDL3_ttf");
     nob_cmd_append(&cmd, "-g");
+    nob_cmd_append(&cmd, "-Wno-missing-braces");
   }
   nob_cc_output(&cmd, output);
 
   nob_cmd_run(&cmd);
 
-  nob_cmd_append(&cmd, output);
-  nob_cmd_run(&cmd);
-
+  printf("Compilation suceeded ! \n");
   return 0;
 }
