@@ -17,5 +17,6 @@ void insert_char(Buffer* b, char c);
 void insert_string(Buffer* b, char* s);
 void move_cursor(Buffer* b, int offset);
 void delete_chars(Buffer* b, int n);
+char* get_raw_content(Buffer* b);
 void free_buffer(Buffer* b);
 #endif

@@ -1,4 +1,6 @@
 #include "buffer.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 int main() {
   Buffer* b = new_buffer("defg", 4);
@@ -14,6 +16,13 @@ int main() {
   print_buffer(b);
   delete_chars(b, 2);
   print_buffer(b);
+  move_cursor(b, -5);
+  print_buffer(b);
+  delete_chars(b, 1);
+  print_buffer(b);
+  char* o = get_raw_content(b);
+  printf("RAW: %s\n", o);
+  free(o);
   free_buffer(b);
   return 0;
 }
