@@ -10,8 +10,8 @@ int main(int argc, char **argv) {
   Nob_Cmd cmd = {0};
   nob_cc(&cmd);
   nob_cc_flags(&cmd);
-  nob_cc_inputs(&cmd, "src/main.c", "src/buffer.c");
-  nob_cmd_append(&cmd, "-g");
+  nob_cc_inputs(&cmd, "src/main.c", "src/buffer.c", "src/renderer.c");
+  nob_cmd_append(&cmd, "-g","-lraylib");
   nob_cmd_append(&cmd, "-Wno-missing-braces");
   nob_cc_output(&cmd, output);
 

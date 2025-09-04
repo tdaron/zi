@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define GAP_SIZE 1
+#define GAP_SIZE 25
 
 Buffer *new_buffer(char *content, int length) {
   Buffer *b = malloc(sizeof(Buffer));
@@ -76,13 +76,16 @@ void delete_chars(Buffer *b, int n) {
 int content_length(Buffer *b) { return b->length - (b->cend - b->ccur); }
 
 void print_buffer(Buffer *b) {
+  if (content_length(b) == 0) {
+    return;
+  }
   printf("%.*s#", (int)(b->ccur - b->buf), b->buf);
   printf("%.*s (%d)\n", (int)((b->buf + b->length) - b->cend), b->cend,
          content_length(b));
 }
 
 char* get_raw_content(Buffer* b) {
-  char* output = malloc(content_length(b) * sizeof(char));
+  char* output = malloc(content_length(b) * sizeof(char)+1);
   sprintf(output, "%.*s%.*s", (int)(b->ccur - b->buf), b->buf,  (int)((b->buf + b->length) - b->cend), b->cend);
   return output;
 }
@@ -94,6 +97,14 @@ int get_cursor_position(Buffer* b) {
 void clear(Buffer* b) {
   b->ccur = b->buf;
   b->cend = b->buf+b->length - 1;
+}
+
+
+void get_contents(Buffer* b, char** slice1, int* slice1_length, char** slice2, int*slice2_length) {
+  *slice1 = b->buf;
+  *slice1_length = b->ccur - b->buf;
+  *slice2 = b->cend;
+  *slice2_length = (b->buf+b->length) - b->cend;
 }
 
 void free_buffer(Buffer *b) {
