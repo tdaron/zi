@@ -1,8 +1,10 @@
-#include "buffer.h"
+#include <buffer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define GAP_SIZE 25
+#define GAP_SIZE 256
+
+// This implementation follows the Gap Buffer datastructure.
 
 Buffer *new_buffer(char *content, int length) {
   Buffer *b = malloc(sizeof(Buffer));
@@ -10,6 +12,7 @@ Buffer *new_buffer(char *content, int length) {
   b->ccur = b->buf;
   b->cend = b->buf + GAP_SIZE;
   b->length = length + GAP_SIZE;
+  b->raw = NULL;
   memcpy(b->cend, content, length * sizeof(char));
   return b;
 }
@@ -85,9 +88,10 @@ void print_buffer(Buffer *b) {
 }
 
 char* get_raw_content(Buffer* b) {
-  char* output = malloc(content_length(b) * sizeof(char)+1);
-  sprintf(output, "%.*s%.*s", (int)(b->ccur - b->buf), b->buf,  (int)((b->buf + b->length) - b->cend), b->cend);
-  return output;
+  if (b->raw != NULL) free(b->raw);
+  b->raw = malloc(content_length(b) * sizeof(char)+1);
+  sprintf(b->raw, "%.*s%.*s", (int)(b->ccur - b->buf), b->buf,  (int)((b->buf + b->length) - b->cend), b->cend);
+  return b->raw;
 }
 
 int get_cursor_position(Buffer* b) {
@@ -109,5 +113,6 @@ void get_contents(Buffer* b, char** slice1, int* slice1_length, char** slice2, i
 
 void free_buffer(Buffer *b) {
   free(b->buf);
+  if (b->raw != NULL) free(b->raw);
   free(b);
 }

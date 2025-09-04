@@ -7,6 +7,9 @@ typedef struct {
   char *ccur; // gap beginning
   char *cend; // gap end
   int length; // buf + length is end
+
+  char* raw; // raw content of the buffer. NEVER assume up to date.
+             // use get_raw_content to get a up to date value.
 } Buffer;
 
 Buffer *new_buffer(char *content, int length);
@@ -19,5 +22,7 @@ char *get_raw_content(Buffer *b);
 void free_buffer(Buffer *b);
 void get_contents(Buffer *b, char **slice1, int *slice1_length, char **slice2,
                   int *slice2_length);
+
+int get_cursor_position(Buffer* b);
 
 #endif

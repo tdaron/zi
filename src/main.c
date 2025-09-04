@@ -1,11 +1,7 @@
-#include "renderer.h"
-#include "buffer.h"
+#include <buffer.h>
+#include <stdio.h>
 
 int main() {
-  renderer_init();
-  Buffer* b = new_buffer("", 0);
-  while (renderer_draw(b)) {
-    continue;
-  }
+  printf("Hello, World !");
   return 0;
 }

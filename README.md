@@ -8,7 +8,7 @@ The only thing needed to build Zi is a C compiler as well as SDL3 and SDL3_ttf.
 
 First, you must build the builder :)
 
-`cc -o nob nob.c`
+`cc -o nob build.c`
 
 Then launch the build using
 

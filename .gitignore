@@ -1,3 +1,4 @@
 dist/
+.cache
 nob
 nob.old
