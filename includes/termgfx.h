@@ -76,25 +76,25 @@
 #ifndef TERMGFX_H
 #define TERMGFX_H
 
+#include <ctype.h>
+#include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <ctype.h>
 
 // --- Saved terminal state ---
 static struct termios tg_old_termios;
 static int tg_term_w = 80, tg_term_h = 24;
 
 // --- Color helpers ---
-static inline void tg_set_fg(int r, int g, int b) { printf("\x1b[38;2;%d;%d;%dm", r,g,b); }
-static inline void tg_set_bg(int r, int g, int b) { printf("\x1b[48;2;%d;%d;%dm", r,g,b); }
+static inline void tg_set_fg(int r, int g, int b) { printf("\x1b[38;2;%d;%d;%dm", r, g, b); }
+static inline void tg_set_bg(int r, int g, int b) { printf("\x1b[48;2;%d;%d;%dm", r, g, b); }
 static inline void tg_reset(void) { printf("\x1b[0m"); }
 
 // --- Cursor helpers ---
-static inline void tg_move(int x, int y) { printf("\x1b[%d;%dH", y+1, x+1); }
+static inline void tg_move(int x, int y) { printf("\x1b[%d;%dH", y + 1, x + 1); }
 static inline void tg_cursor_hide(void) { printf("\x1b[?25l"); }
 static inline void tg_cursor_show(void) { printf("\x1b[?25h"); }
 
@@ -104,15 +104,30 @@ static inline void tg_alt_screen_enable(void) { printf("\x1b[?1049h"); }
 static inline void tg_alt_screen_disable(void) { printf("\x1b[?1049l"); }
 
 // --- Drawing ---
-static inline void tg_draw_box(int x, int y, int w, int h, char c) {
-    for (int j=0;j<h;j++) { tg_move(x,y+j); for (int i=0;i<w;i++) putchar(c); }
+static inline void tg_draw_box(int x, int y, int w, int h, char c)
+{
+    for (int j = 0; j < h; j++) {
+        tg_move(x, y + j);
+        for (int i = 0; i < w; i++)
+            putchar(c);
+    }
 }
-static inline void tg_print_text(int x,int y,const char* s) { tg_move(x,y); fputs(s, stdout); }
+static inline void tg_print_text(int x, int y, const char* s)
+{
+    tg_move(x, y);
+    fputs(s, stdout);
+}
+static inline void tg_print_text_with_length(int x, int y, const char* s, int length)
+{
+    tg_move(x, y);
+    fwrite(s, sizeof(char), length, stdout);
+}
 
 // --- Raw mode ---
-static inline void tg_enable_raw(void) {
+static inline void tg_enable_raw(void)
+{
     struct termios raw;
-    tcgetattr(STDIN_FILENO,&tg_old_termios);
+    tcgetattr(STDIN_FILENO, &tg_old_termios);
     raw = tg_old_termios;
     raw.c_lflag &= ~(ICANON | ECHO);
     raw.c_cc[VMIN] = 1;
@@ -122,93 +137,147 @@ static inline void tg_enable_raw(void) {
 static inline void tg_disable_raw(void) { tcsetattr(STDIN_FILENO, TCSANOW, &tg_old_termios); }
 
 // --- Terminal size ---
-static inline void tg_update_size(void) {
+static inline void tg_update_size(void)
+{
     struct winsize ws;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws)==0) { tg_term_w = ws.ws_col; tg_term_h = ws.ws_row; }
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0) {
+        tg_term_w = ws.ws_col;
+        tg_term_h = ws.ws_row;
+    }
 }
 static inline int tg_width(void) { return tg_term_w; }
-static inline int tg_height(void){ return tg_term_h; }
+static inline int tg_height(void) { return tg_term_h; }
 
 // optional: call in main to auto-update on SIGWINCH
-static void tg_handle_winch(int sig) { (void)sig; tg_update_size(); }
-static inline void tg_install_winch_handler(void) { signal(SIGWINCH, tg_handle_winch); tg_update_size(); }
+static void tg_handle_winch(int sig)
+{
+    (void)sig;
+    tg_update_size();
+}
+static inline void tg_install_winch_handler(void)
+{
+    signal(SIGWINCH, tg_handle_winch);
+    tg_update_size();
+}
 
 // --- Input ---
 static inline int tg_getch(void) { return getchar(); }
-static inline void tg_set_nonblocking(int enable) {
+static inline void tg_set_nonblocking(int enable)
+{
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    if (flags == -1) return;
-    if (enable) fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
-    else fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK);
+    if (flags == -1)
+        return;
+    if (enable)
+        fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+    else
+        fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK);
 }
 
 // X10 / VT200 style mouse reporting
-static inline void tg_mouse_enable(void) {
+static inline void tg_mouse_enable(void)
+{
     printf("\x1b[?1000h"); // send mouse click events
     printf("\x1b[?1006h"); // enable SGR extended mode
     fflush(stdout);
 }
-static inline void tg_mouse_disable(void) {
+static inline void tg_mouse_disable(void)
+{
     printf("\x1b[?1000l");
     printf("\x1b[?1006l");
     fflush(stdout);
 }
 
 // --- Event types ---
-typedef enum { TG_EV_NONE=0, TG_EV_KEY, TG_EV_MOUSE } tg_event_type;
+typedef enum { TG_EV_NONE = 0,
+    TG_EV_KEY,
+    TG_EV_MOUSE } tg_event_type;
 
-typedef enum { 
-    TG_KEY_UNKNOWN=0, TG_KEY_UP, TG_KEY_DOWN, TG_KEY_LEFT, TG_KEY_RIGHT,
-    TG_KEY_ENTER, TG_KEY_ESC, TG_KEY_BACKSPACE, TG_KEY_CHAR
+typedef enum {
+    TG_KEY_UNKNOWN = 0,
+    TG_KEY_UP,
+    TG_KEY_DOWN,
+    TG_KEY_LEFT,
+    TG_KEY_RIGHT,
+    TG_KEY_ENTER,
+    TG_KEY_ESC,
+    TG_KEY_BACKSPACE,
+    TG_KEY_CHAR
 } tg_key;
 
-typedef struct { int x,y; int button; } tg_mouse;
+typedef struct {
+    int x, y;
+    int button;
+} tg_mouse;
 
 typedef struct {
     tg_event_type type;
-    union { tg_key key; tg_mouse mouse; } data;
+    union {
+        tg_key key;
+        tg_mouse mouse;
+    } data;
     char ch; // valid if key == TG_KEY_CHAR
 } tg_event;
 
 // returns TG_EV_NONE if no event
-static inline tg_event tg_get_event(void) {
-    tg_event ev = {0};
+static inline tg_event tg_get_event(void)
+{
+    tg_event ev = { 0 };
     int c = getchar();
-    if (c == EOF) return ev;
+    if (c == EOF)
+        return ev;
 
     if (c == 0x1b) { // ESC sequence
         int c1 = getchar();
         if (c1 == '[') { // CSI
             int c2 = getchar();
-            switch(c2) {
-                case 'A': ev.type=TG_EV_KEY; ev.data.key=TG_KEY_UP; return ev;
-                case 'B': ev.type=TG_EV_KEY; ev.data.key=TG_KEY_DOWN; return ev;
-                case 'C': ev.type=TG_EV_KEY; ev.data.key=TG_KEY_RIGHT; return ev;
-                case 'D': ev.type=TG_EV_KEY; ev.data.key=TG_KEY_LEFT; return ev;
-                case '<': { // mouse SGR
-                    int b=0,x=0,y=0; char m;
-                    if (scanf("%d;%d;%d%c",&b,&x,&y,&m)==4) {
-                        ev.type=TG_EV_MOUSE;
-                        ev.data.mouse.x=x-1;
-                        ev.data.mouse.y=y-1;
-                        ev.data.mouse.button=b&3;
-                        return ev;
-                    }
+            switch (c2) {
+            case 'A':
+                ev.type = TG_EV_KEY;
+                ev.data.key = TG_KEY_UP;
+                return ev;
+            case 'B':
+                ev.type = TG_EV_KEY;
+                ev.data.key = TG_KEY_DOWN;
+                return ev;
+            case 'C':
+                ev.type = TG_EV_KEY;
+                ev.data.key = TG_KEY_RIGHT;
+                return ev;
+            case 'D':
+                ev.type = TG_EV_KEY;
+                ev.data.key = TG_KEY_LEFT;
+                return ev;
+            case '<': { // mouse SGR
+                int b = 0, x = 0, y = 0;
+                char m;
+                if (scanf("%d;%d;%d%c", &b, &x, &y, &m) == 4) {
+                    ev.type = TG_EV_MOUSE;
+                    ev.data.mouse.x = x - 1;
+                    ev.data.mouse.y = y - 1;
+                    ev.data.mouse.button = b & 3;
+                    return ev;
                 }
             }
-        } else if (c1==EOF) { // single ESC key
-            ev.type=TG_EV_KEY; ev.data.key=TG_KEY_ESC; return ev;
+            }
+        } else if (c1 == EOF) { // single ESC key
+            ev.type = TG_EV_KEY;
+            ev.data.key = TG_KEY_ESC;
+            return ev;
         }
     }
 
     // normal keys
-    ev.type=TG_EV_KEY;
-    if (c=='\r' || c=='\n') ev.data.key=TG_KEY_ENTER;
-    else if (c==127 || c==8) ev.data.key=TG_KEY_BACKSPACE;
-    else if (isprint(c)) { ev.data.key=TG_KEY_CHAR; ev.ch=(char)c; }
-    else ev.data.key=TG_KEY_UNKNOWN;
+    ev.type = TG_EV_KEY;
+    if (c == '\r' || c == '\n')
+        ev.data.key = TG_KEY_ENTER;
+    else if (c == 127 || c == 8)
+        ev.data.key = TG_KEY_BACKSPACE;
+    else if (isprint(c)) {
+        ev.data.key = TG_KEY_CHAR;
+        ev.ch = (char)c;
+    } else
+        ev.data.key = TG_KEY_UNKNOWN;
     return ev;
 }
 
 #endif // TERMGFX_H
-
