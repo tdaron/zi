@@ -1,7 +1,7 @@
 #include <buffer.h>
-#include <stdio.h>
+#include <renderer.h>
 
 int main() {
-  printf("Hello, World !");
+  render();
   return 0;
 }

@@ -1,110 +1,45 @@
+#include <termgfx.h>
 #include <buffer.h>
-#include <raylib.h>
-#include <stdlib.h>
 
-Font font;
+Buffer* b;
 
-void renderer_init() {
-  InitWindow(640, 480, "Zi Editor");
-  SetTargetFPS(60);
-  font = LoadFontEx("/home/theo/.local/share/fonts/FiraCodeNerdFont-Regular.ttf", 16, 0, 250);
-  SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+void draw() {
+  tg_reset();
+  tg_clear();
+  tg_update_size();
+  tg_set_fg(255, 255, 255);
+  tg_print_text(0, 0, "Zi Editor");
+  tg_print_text(0, 5, get_raw_content(b));
+  fflush(stdout);
 }
 
+void render() {
+  b = new_buffer(NULL, 0);
+  tg_alt_screen_enable();
+  tg_enable_raw();
+  tg_set_nonblocking(1);
+  tg_cursor_hide();
+  tg_install_winch_handler();
+  tg_mouse_enable();
 
-void draw_buffer(Buffer *b, Font font, int start_x, int start_y, int font_size) {
-    int x = start_x;
-    int y = start_y;
-
-    char *s1, *s2;
-    int len1, len2;
-    get_contents(b, &s1, &len1, &s2, &len2);
-
-    int cursor_index = get_cursor_position(b); // position en caractères
-    int char_index = 0; // compteur global pour trouver où placer le curseur
-    int cursor_x = start_x;
-    int cursor_y = start_y;
-
-    // rendu du premier segment
-    for (int i = 0; i < len1; i++) {
-        char c = s1[i];
-
-        if (char_index == cursor_index) {
-            cursor_x = x;
-            cursor_y = y;
-        }
-
-        if (c == '\n') {
-            x = start_x;
-            y += font_size + 4;
-        } else {
-            int cp = (unsigned char)c;
-            DrawTextCodepoint(font, cp, (Vector2){x, y}, font_size, BLACK);
-            GlyphInfo gi = GetGlyphInfo(font, cp);
-            x += gi.advanceX;
-        }
-
-        char_index++;
+  tg_event ev;
+  while (1) {
+    ev = tg_get_event();
+    if (ev.type == TG_EV_KEY) {
+      if (ev.data.key == TG_KEY_ESC)
+        break;
+      if (ev.data.key == TG_KEY_BACKSPACE) delete_chars(b, 1);
+      if (ev.data.key == TG_KEY_CHAR) insert_char(b, ev.ch);
     }
+    draw();
 
-    // rendu du second segment
-    for (int i = 0; i < len2; i++) {
-        char c = s2[i];
-
-        if (char_index == cursor_index) {
-            cursor_x = x;
-            cursor_y = y;
-        }
-
-        if (c == '\n') {
-            x = start_x;
-            y += font_size + 4;
-        } else {
-            int cp = (unsigned char)c;
-            DrawTextCodepoint(font, cp, (Vector2){x, y}, font_size, BLACK);
-            GlyphInfo gi = GetGlyphInfo(font, cp);
-            x += gi.advanceX;
-        }
-
-        char_index++;
-    }
-
-    // si le curseur est à la fin du texte
-    if (char_index == cursor_index) {
-        cursor_x = x;
-        cursor_y = y;
-    }
-
-    // dessine le curseur (barre verticale)
-    DrawRectangle(cursor_x, cursor_y, 2, font_size, RED);
-}
-
-bool renderer_draw(Buffer *buffer) {
-  BeginDrawing();
-  DrawRectangle(0, 0, 640, 480, BEIGE);
-  if (IsKeyDown(KEY_LEFT)) {
-    move_cursor(buffer, -1);
-  }
-  if (IsKeyDown(KEY_RIGHT)) {
-    move_cursor(buffer, 1);
-  }
-  if (IsKeyDown(KEY_BACKSPACE)) {
-    delete_chars(buffer, 1);
-  }
-  if (IsKeyDown(KEY_ENTER)) {
-    insert_char(buffer, '\n');
-  }
-  int key = GetCharPressed();
-  while (key > 0) {
-    insert_char(buffer, (char)key);
-    // key is Unicode codepoint
-    key = GetCharPressed();
+    // optional: throttle loop
+    usleep(16000);
   }
 
-  char* content = get_raw_content(buffer);
-  // DrawTextEx(font, content, (Vector2){10, 10}, 16, 0, BLACK);
-  draw_buffer(buffer, font, 10, 10, 16);
-  EndDrawing();
-  free(content);
-  return true;
+  tg_mouse_disable();
+  tg_set_nonblocking(0);
+  tg_disable_raw();
+  tg_alt_screen_disable();
+  tg_cursor_show();
 }

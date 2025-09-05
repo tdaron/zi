@@ -5,7 +5,7 @@
 
 
 void add_sources(Nob_Cmd* cmd) {
-  nob_cc_inputs(cmd, "src/buffer.c");  
+  nob_cc_inputs(cmd, "src/buffer.c", "src/renderer.c");  
 }
 
 void build_exec(char* mainFile, char* output) {
