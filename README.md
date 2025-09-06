@@ -4,7 +4,10 @@
 ## How to build
 This project is using [nob.h](https://github.com/tsoding/nob.h) build system.
 
-The only thing needed to build Zi is a C compiler as well as SDL3 and SDL3_ttf.
+Dependencies:
+  - libc
+
+The only thing needed to build Zi is a C compiler.
 
 First, you must build the builder :)
 
