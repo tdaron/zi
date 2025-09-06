@@ -10,9 +10,10 @@ typedef struct {
 
     char* raw; // raw content of the buffer. NEVER assume up to date.
                // use get_raw_content to get a up to date value.
+    char* name;
 } Buffer;
 
-Buffer* new_buffer(char* content, int length);
+Buffer* new_buffer(char* name, char* content, int length);
 void print_buffer(Buffer* b);
 void insert_char(Buffer* b, char c);
 void insert_string(Buffer* b, char* s);

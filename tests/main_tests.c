@@ -1,7 +1,10 @@
+#include "editor.h"
 #include "tests_buffers.c"
 
 #define TUNIT_IMPLEMENTATION
 #include <tunit.h>
+
+Editor editor;
 
 int main()
 {

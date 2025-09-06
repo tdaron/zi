@@ -6,7 +6,7 @@
 
 // This implementation follows the Gap Buffer datastructure.
 
-Buffer* new_buffer(char* content, int length)
+Buffer* new_buffer(char* name, char* content, int length)
 {
     Buffer* b = malloc(sizeof(Buffer));
     b->buf = malloc((length + GAP_SIZE) * sizeof(char));
@@ -14,6 +14,7 @@ Buffer* new_buffer(char* content, int length)
     b->cend = b->buf + GAP_SIZE;
     b->length = length + GAP_SIZE;
     b->raw = NULL;
+    b->name = name;
     memcpy(b->cend, content, length * sizeof(char));
     return b;
 }

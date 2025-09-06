@@ -1,20 +1,73 @@
 #include <stdio.h>
+#include <string.h>
 #define CLAY_IMPLEMENTATION
 #include <clay.h>
+#include <editor.h>
+#include <palette.h>
 
+void buffersBar()
+{
+
+    CLAY({.layout = { .sizing = {
+                        CLAY_SIZING_GROW(0),
+                        CLAY_SIZING_FIT(0),
+                    }, .childGap=2 } })
+    {
+        for (int i = 0; i < editor.buffersCount; i++) {
+            char* n = editor.buffers[i]->name;
+            Clay_String name = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
+            Clay_Color c = INACTIVE_BUFFER;
+            if (i == editor.currentBuffer) {
+                c = (Clay_Color)ACTIVE_BUFFER;
+            }
+            CLAY_TEXT(name, CLAY_TEXT_CONFIG({ .textColor = c }));
+        }
+    }
+}
+void statusBar()
+{
+
+    CLAY({ .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) }, .childGap = 2 } })
+    {
+        Clay_String ins = CLAY_STRING("INS");
+        Clay_String nor = CLAY_STRING("NOR");
+        Clay_String s = editor.mode == INSERT_MODE ? ins : nor;
+        CLAY_TEXT(s, CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
+        char* n = editor.buffers[editor.currentBuffer]->name;
+        Clay_String name = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
+        CLAY({ .layout = { .childGap = 0 } })
+        {
+            CLAY_TEXT(name, CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
+            CLAY_TEXT(CLAY_STRING("[+]"), CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
+        }
+    }
+}
+void message()
+{
+    CLAY({ .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(1) } } })
+    {
+        if (editor.message != 0) {
+            char* n = editor.message;
+            Clay_String message = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
+
+            CLAY_TEXT(message, CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
+            
+        }
+    }
+}
 Clay_RenderCommandArray layout()
 {
     Clay_BeginLayout();
     CLAY({ .id = CLAY_ID("background"),
-        .backgroundColor = (Clay_Color) { 33, 40, 48, 255 },
-        .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) } , .layoutDirection=CLAY_TOP_TO_BOTTOM} }
+        .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) }, .layoutDirection = CLAY_TOP_TO_BOTTOM } }
 
-            )
+    )
     {
-        CLAY_TEXT(CLAY_STRING("Zi Editor"), CLAY_TEXT_CONFIG());
+        buffersBar();
         CLAY({ .custom = { .customData = "content" },
             .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) } } });
-        CLAY_TEXT(CLAY_STRING("Status bar"), CLAY_TEXT_CONFIG());
+        statusBar();
+        message();
     }
     Clay_RenderCommandArray renderCommands = Clay_EndLayout();
     return renderCommands;
@@ -45,7 +98,4 @@ void layout_init(int screenWidth, int screenHeight)
     Clay_SetMeasureTextFunction(MeasureText, NULL);
 }
 
-void layout_set_dimension(int width, int height)
-{
-    Clay_SetLayoutDimensions((Clay_Dimensions){width, height});
-}
+void layout_set_dimension(int width, int height) { Clay_SetLayoutDimensions((Clay_Dimensions) { width, height }); }

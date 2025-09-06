@@ -12,11 +12,11 @@ const char* compile_object_async(Nob_Procs* procs, const char* source_path)
     const char* obj_path = nob_temp_sprintf("dist/obj/" SV_Fmt ".o", SV_Arg(base_name));
 
     Nob_Cmd cmd = { 0 };
-    nob_cc(&cmd);
+    nob_cmd_append(&cmd, "gcc");
     nob_cmd_append(&cmd, "-c");
     nob_cc_flags(&cmd);
     nob_cc_inputs(&cmd, source_path);
-    nob_cmd_append(&cmd, "-g", "-Iincludes");
+    nob_cmd_append(&cmd, "-g", "-Iincludes", "-Iconfig");
     nob_cmd_append(&cmd, "-Wno-missing-braces");
     nob_cc_output(&cmd, obj_path);
 
@@ -54,7 +54,8 @@ int main(int argc, char** argv)
     const char* common_sources[] = {
         "src/buffer.c",
         "src/renderer.c",
-        "src/layout.c"
+        "src/layout.c",
+        "src/editor.c"
     };
 
     nob_log(NOB_INFO, "Compiling source files...");
