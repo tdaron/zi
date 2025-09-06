@@ -28,14 +28,6 @@
 #ifndef CLAY_HEADER
 #define CLAY_HEADER
 
-#if !( \
-    (defined(__cplusplus) && __cplusplus >= 202002L) || \
-    (defined(__STDC__) && __STDC__ == 1 && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || \
-    defined(_MSC_VER) || \
-    defined(__OBJC__) \
-)
-#error "Clay requires C99, C++20, or MSVC"
-#endif
 
 #ifdef CLAY_WASM
 #define CLAY_WASM_EXPORT(name) __attribute__((export_name(name)))
@@ -151,15 +143,6 @@ static inline void Clay__SuppressUnusedLatchDefinitionVariableWarning(void) { (v
 
 #define CLAY_TEXT(text, textConfig) Clay__OpenTextElement(text, textConfig)
 
-#ifdef __cplusplus
-
-#define CLAY__INIT(type) type
-
-#define CLAY_PACKED_ENUM enum : uint8_t
-
-#define CLAY__DEFAULT_STRUCT {}
-
-#else
 
 #define CLAY__INIT(type) (type)
 
@@ -175,11 +158,6 @@ static inline void Clay__SuppressUnusedLatchDefinitionVariableWarning(void) { (v
 #define CLAY__DEFAULT_STRUCT {0}
 #endif
 
-#endif // __cplusplus
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 // Utility Structs -------------------------
 
@@ -928,9 +906,6 @@ CLAY_DLL_EXPORT uint32_t Clay__GetParentElementId(void);
 extern Clay_Color Clay__debugViewHighlightColor;
 extern uint32_t Clay__debugViewWidth;
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif // CLAY_HEADER
 
