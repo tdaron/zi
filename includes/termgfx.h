@@ -189,7 +189,7 @@ static inline void tg_mouse_disable(void)
 }
 
 
-void tg_wait_for_keypress(int timeout_ms) {
+static inline void tg_wait_for_keypress(int timeout_ms) {
     fd_set fds;
     struct timeval tv;
     FD_ZERO(&fds);

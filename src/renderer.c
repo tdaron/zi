@@ -59,37 +59,8 @@ bool render(Clay_RenderCommandArray commands)
     tg_wait_for_keypress(1000);
     tg_event ev;
     ev = tg_get_event();
-    if (ev.type == TG_EV_KEY) {
-        if (ev.data.key == TG_KEY_ESC) {
-            if (editor.mode == INSERT_MODE) {
-                editor.mode = NORMAL_MODE;
-            } else {
-                return false;
-            }
-        }
-        if (ev.data.key == TG_KEY_BACKSPACE) {
-            if (editor.mode == INSERT_MODE) {
-                delete_chars(editor.buffers[editor.currentBuffer], 1);
-            }
-        }
-        if (ev.data.key == TG_KEY_CHAR) {
-            if (editor.mode == INSERT_MODE) {
-                insert_char(editor.buffers[editor.currentBuffer], ev.ch);
-            } else {
-                if (ev.ch == 'n') {
-                    editor_next_buffer(&editor);
-                    editor.message = "";
-                }
-                if (ev.ch == 'q')
-                    return false;
-                if (ev.ch == 'i')
-                    editor.mode = INSERT_MODE;
-            }
-        }
-    }
+    editor_handle_event(&ev);
 
-    // 30 FPS (might adapt this)
-    // usleep(16000 * 2);
     return true;
 }
 
