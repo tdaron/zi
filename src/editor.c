@@ -1,7 +1,9 @@
 #include "buffer.h"
 #include "termgfx.h"
 #include <editor.h>
-void editor_open_buffer(char* name) { editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0); }
+void editor_open_buffer(char* name) {
+    editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0);
+}
 void editor_set_current_buffer(int buffer) { editor.currentBuffer = buffer; }
 
 void free_editor()
@@ -16,11 +18,11 @@ void editor_handle_event(tg_event* ev)
 {
     if (ev->type == TG_EV_KEY) {
         if (ev->data.key == TG_KEY_ESC) {
-            if (editor.mode == INSERT_MODE) {
-                editor.mode = NORMAL_MODE;
-            }
             if (editor.mode == NORMAL_MODE) {
                 editor.shouldClose = true;
+            } else {
+
+                editor.mode = NORMAL_MODE;
             }
         }
         if (ev->data.key == TG_KEY_BACKSPACE) {
@@ -39,9 +41,11 @@ void editor_handle_event(tg_event* ev)
                 if (ev->ch == 'i')
                     editor.mode = INSERT_MODE;
                 if (ev->ch == ':') {
+                    editor.message = ":some-cmd-here";
                     editor.mode = COMMAND_MODE;
                 }
             }
         }
     }
 }
+
