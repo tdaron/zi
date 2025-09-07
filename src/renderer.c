@@ -55,6 +55,8 @@ void draw(Clay_RenderCommandArray renderCommands)
 
 bool render(Clay_RenderCommandArray commands)
 {
+    draw(commands);
+    tg_wait_for_keypress(1000);
     tg_event ev;
     ev = tg_get_event();
     if (ev.type == TG_EV_KEY) {
@@ -78,17 +80,16 @@ bool render(Clay_RenderCommandArray commands)
                     editor_next_buffer(&editor);
                     editor.message = "";
                 }
-                if (ev.ch == 'k')
-                    editor.message = "Pressed letter k !";
+                if (ev.ch == 'q')
+                    return false;
                 if (ev.ch == 'i')
                     editor.mode = INSERT_MODE;
             }
         }
     }
-    draw(commands);
 
     // 30 FPS (might adapt this)
-    usleep(16000 * 2);
+    // usleep(16000 * 2);
     return true;
 }
 

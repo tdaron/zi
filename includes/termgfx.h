@@ -83,6 +83,7 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/select.h>
 
 // --- Saved terminal state ---
 static struct termios tg_old_termios;
@@ -186,6 +187,23 @@ static inline void tg_mouse_disable(void)
     printf("\x1b[?1006l");
     fflush(stdout);
 }
+
+
+void tg_wait_for_keypress(int timeout_ms) {
+    fd_set fds;
+    struct timeval tv;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+
+    tv.tv_sec  = timeout_ms / 1000;
+    tv.tv_usec = (timeout_ms % 1000) * 1000;
+
+    select(STDIN_FILENO + 1, &fds, NULL, NULL,
+                     timeout_ms >= 0 ? &tv : NULL);
+
+    return; // timeout or no data
+}
+
 
 // --- Event types ---
 typedef enum { TG_EV_NONE = 0,
