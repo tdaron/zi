@@ -1,9 +1,10 @@
-#include <stdio.h>
-#include <string.h>
+#include "termgfx.h"
 #include <clay.h>
 #include <editor.h>
-#include <palette.h>
 #include <nob.h>
+#include <palette.h>
+#include <stdio.h>
+#include <string.h>
 
 void buffersBar()
 {
@@ -11,7 +12,7 @@ void buffersBar()
     CLAY({.layout = { .sizing = {
                         CLAY_SIZING_GROW(0),
                         CLAY_SIZING_FIT(0),
-                    }, .childGap=2 } })
+                    }, .childGap=2, }, .backgroundColor=STATUS_COLOR })
     {
         for (int i = 0; i < editor.buffersCount; i++) {
             char* n = editor.buffers[i]->name;
@@ -24,10 +25,13 @@ void buffersBar()
         }
     }
 }
+char toto[50];
+
 void statusBar()
 {
 
-    CLAY({ .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) }, .childGap = 2 } })
+    CLAY({ .backgroundColor = STATUS_COLOR,
+        .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) }, .childGap = 2 } })
     {
         Clay_String ins = CLAY_STRING("INS");
         Clay_String nor = CLAY_STRING("NOR");
@@ -51,7 +55,6 @@ void message()
             Clay_String message = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
 
             CLAY_TEXT(message, CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
-            
         }
     }
 }
@@ -59,7 +62,8 @@ Clay_RenderCommandArray layout()
 {
     Clay_BeginLayout();
     CLAY({ .id = CLAY_ID("background"),
-        .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) }, .layoutDirection = CLAY_TOP_TO_BOTTOM } }
+        .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) }, .layoutDirection = CLAY_TOP_TO_BOTTOM },
+        .backgroundColor = BACKGROUND_COLOR }
 
     )
     {

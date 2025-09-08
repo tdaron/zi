@@ -2,45 +2,46 @@
 #include <buffer.h>
 #include <clay.h>
 #include <renderer.h>
+#include <stdio.h>
 #include <termgfx.h>
 
 void draw(Clay_RenderCommandArray renderCommands)
 {
-    tg_reset();
-    tg_clear();
     tg_update_size();
     for (int i = 0; i < renderCommands.length; i++) {
         Clay_RenderCommand* renderCommand = &renderCommands.internalArray[i];
         switch (renderCommand->commandType) {
         case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
-
             Clay_BoundingBox box = renderCommand->boundingBox;
             Clay_Color color = renderCommand->renderData.rectangle.backgroundColor;
-            tg_set_bg(color.r, color.g, color.b);
+            tg_set_bg(CLAY_TO_TERM_COLOR(color));
             tg_draw_box(box.x, box.y, box.width, box.height, ' ');
             break;
         }
 
-        case CLAY_RENDER_COMMAND_TYPE_TEXT:
+        case CLAY_RENDER_COMMAND_TYPE_TEXT: {
             Clay_Color color = renderCommand->renderData.text.textColor;
-            tg_set_fg(color.r, color.g, color.b);
+            tg_set_bg(TRANSPARENT);
+            tg_set_fg(CLAY_TO_TERM_COLOR(color));
             tg_print_text_with_length(renderCommand->boundingBox.x, renderCommand->boundingBox.y,
                 renderCommand->renderData.text.stringContents.chars,
                 renderCommand->renderData.text.stringContents.length);
             break;
+        }
         case CLAY_RENDER_COMMAND_TYPE_CUSTOM: {
+
             Clay_BoundingBox box = renderCommand->boundingBox;
             char *slice1, *slice2;
             int length1, length2;
             get_contents(editor.buffers[editor.currentBuffer], &slice1, &length1, &slice2, &length2);
-            tg_set_fg(255, 255, 255);
+            tg_set_bg(TRANSPARENT);
+            tg_set_fg(&(Color) { 255, 255, 255 });
             tg_print_text_with_length(box.x, box.y, slice1, length1);
             // TODO: Proper compute display size of slice1
             tg_print_text_with_length(box.x + length1, box.y, slice2, length2);
             if (editor.mode == INSERT_MODE) {
-                tg_set_bg(255, 255, 255);
+                tg_set_bg(&(Color) { 255, 255, 255 });
                 tg_print_text(box.x + length1 + length2, box.y, " ");
-                tg_reset();
             }
 
             break;
@@ -50,7 +51,7 @@ void draw(Clay_RenderCommandArray renderCommands)
         }
     }
 
-    fflush(stdout);
+    tg_flush();
 }
 
 bool render(Clay_RenderCommandArray commands)

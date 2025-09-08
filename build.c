@@ -56,6 +56,7 @@ int main(int argc, char** argv)
 
     nob_mkdir_if_not_exists(DIST_FOLDER);
     nob_mkdir_if_not_exists(OBJ_FOLDER);
+    nob_log(NOB_INFO, "Compiling source files...");
 
     Nob_Procs procs = { 0 };
     if (nob_needs_rebuild1(OBJ_FOLDER "clay.o", "includes/clay.h")) {
@@ -63,19 +64,19 @@ int main(int argc, char** argv)
         nob_cc(&cmd);
         nob_cmd_append(&cmd, "-c");
         nob_cmd_append(&cmd, "-x", "c");
+        nob_cmd_append(&cmd, "-O3");
         nob_cmd_append(&cmd, "-DCLAY_IMPLEMENTATION");
         nob_cc_inputs(&cmd, "includes/clay.h");
         nob_cc_output(&cmd, OBJ_FOLDER "clay.o");
         nob_cmd_run(&cmd, .async = &procs);
     } else {
-        nob_log(NOB_INFO, "clay.o already up to date.");
+        nob_log(NOB_INFO, OBJ_FOLDER"clay.o is up to date.");
     }
 
     Nob_File_Paths common_objs = { 0 };
 
-    const char* common_sources[] = { "src/buffer.c", "src/renderer.c", "src/layout.c", "src/editor.c" };
+    const char* common_sources[] = { "src/termgfx.c", "src/buffer.c", "src/renderer.c", "src/layout.c", "src/editor.c" };
 
-    nob_log(NOB_INFO, "Compiling source files...");
 
     for (size_t i = 0; i < NOB_ARRAY_LEN(common_sources); ++i) {
         const char* obj_path = compile_object_async(&procs, common_sources[i]);
