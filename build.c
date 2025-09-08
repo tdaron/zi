@@ -2,6 +2,9 @@
 #define NOB_IMPLEMENTATION
 #include "includes/nob.h"
 
+#define DIST_FOLDER "dist/"
+#define OBJ_FOLDER DIST_FOLDER "obj/"
+
 const char* compile_object_async(Nob_Procs* procs, const char* source_path)
 {
     const char* source_filename = nob_path_name(source_path);
@@ -9,7 +12,12 @@ const char* compile_object_async(Nob_Procs* procs, const char* source_path)
     size_t base_name_len = (last_dot == NULL) ? strlen(source_filename) : (size_t)(last_dot - source_filename);
 
     Nob_String_View base_name = nob_sv_from_parts(source_filename, base_name_len);
-    const char* obj_path = nob_temp_sprintf("dist/obj/" SV_Fmt ".o", SV_Arg(base_name));
+    const char* obj_path = nob_temp_sprintf(OBJ_FOLDER SV_Fmt ".o", SV_Arg(base_name));
+
+    if (!nob_needs_rebuild1(obj_path, source_path)) {
+        nob_log(NOB_INFO, "%s is up to date.", (obj_path));
+        return obj_path;
+    }
 
     Nob_Cmd cmd = { 0 };
     nob_cmd_append(&cmd, "gcc");
@@ -30,6 +38,7 @@ void link_executable(const char* output_path, const char* main_obj, Nob_File_Pat
     nob_cc(&cmd);
 
     nob_cmd_append(&cmd, main_obj);
+    nob_cmd_append(&cmd, OBJ_FOLDER"clay.o");
     nob_da_append_many(&cmd, common_objs.items, common_objs.count);
 
     nob_cc_output(&cmd, output_path);
@@ -45,18 +54,26 @@ int main(int argc, char** argv)
 {
     NOB_GO_REBUILD_URSELF(argc, argv);
 
-    nob_mkdir_if_not_exists("dist");
-    nob_mkdir_if_not_exists("dist/obj");
+    nob_mkdir_if_not_exists(DIST_FOLDER);
+    nob_mkdir_if_not_exists(OBJ_FOLDER);
 
     Nob_Procs procs = { 0 };
+    if (nob_needs_rebuild1(OBJ_FOLDER "clay.o", "includes/clay.h")) {
+        Nob_Cmd cmd = { 0 };
+        nob_cc(&cmd);
+        nob_cmd_append(&cmd, "-c");
+        nob_cmd_append(&cmd, "-x", "c");
+        nob_cmd_append(&cmd, "-DCLAY_IMPLEMENTATION");
+        nob_cc_inputs(&cmd, "includes/clay.h");
+        nob_cc_output(&cmd, OBJ_FOLDER "clay.o");
+        nob_cmd_run(&cmd, .async = &procs);
+    } else {
+        nob_log(NOB_INFO, "clay.o already up to date.");
+    }
+
     Nob_File_Paths common_objs = { 0 };
 
-    const char* common_sources[] = {
-        "src/buffer.c",
-        "src/renderer.c",
-        "src/layout.c",
-        "src/editor.c"
-    };
+    const char* common_sources[] = { "src/buffer.c", "src/renderer.c", "src/layout.c", "src/editor.c" };
 
     nob_log(NOB_INFO, "Compiling source files...");
 
