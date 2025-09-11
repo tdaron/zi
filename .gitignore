@@ -1,4 +1,6 @@
 dist/
 .cache
+.zi_log
+.vscode
 nob
 nob.old

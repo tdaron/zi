@@ -1,4 +1,5 @@
 #include <buffer.h>
+#include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,7 +7,7 @@
 
 // This implementation follows the Gap Buffer datastructure.
 
-Buffer* new_buffer(char* name, char* content, int length)
+Buffer* new_buffer(char* name, char* content, int length, Log *log)
 {
     Buffer* b = malloc(sizeof(Buffer));
     b->buf = malloc((length + GAP_SIZE) * sizeof(char));
@@ -16,6 +17,7 @@ Buffer* new_buffer(char* name, char* content, int length)
     b->raw = NULL;
     b->name = name;
     memcpy(b->cend, content, length * sizeof(char));
+    b->log = log;
     return b;
 }
 
@@ -62,7 +64,7 @@ void insert_char(Buffer* b, char c)
 
     // Gap is filled
     if (b->ccur == b->cend) {
-        printf("realloc..\n");
+        log_print(*b->log, sv_from_cstr("realloc...\n"), LOG_INFO);
         int offset = b->ccur - b->buf;
         int to_cpy = (b->buf + b->length) - b->cend;
         b->buf = realloc(b->buf, b->length + GAP_SIZE);

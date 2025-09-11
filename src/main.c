@@ -2,12 +2,14 @@
 #include <editor.h>
 #include <layout.h>
 #include <renderer.h>
+#include <io.h>
 #define SV_IMPLEMENTATION
 #include <sv.h>
 Editor editor;
 
 int main()
 {
+    editor_open_log();
     editor_open_buffer("src/main.c");
     editor_open_buffer("src/buffer.c");
     editor_open_buffer("src/basic_hello.c");

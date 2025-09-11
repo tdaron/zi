@@ -4,6 +4,7 @@
 #include "buffer.h"
 #include "termgfx.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <sv.h>
 
 typedef enum { NORMAL_MODE, INSERT_MODE, INPUT_MODE } EDITOR_MODE;
@@ -28,10 +29,12 @@ typedef struct {
     bool shouldClose;
     UserInput userInput;
 
+    Log log; // Passed to the buffers on init 
 } Editor;
 
 extern Editor editor;
 
+void editor_open_log();
 void editor_open_buffer(char* name);
 void editor_set_current_buffer(int buffer);
 void free_editor();

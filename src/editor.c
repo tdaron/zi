@@ -4,7 +4,9 @@
 #include <nob.h>
 #include <string.h>
 #include <sv.h>
-void editor_open_buffer(char* name) { editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0); }
+
+void editor_open_log() { editor.log = log_init(); }
+void editor_open_buffer(char* name) { editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0, &editor.log); }
 void editor_set_current_buffer(int buffer) { editor.currentBuffer = buffer; }
 
 void free_editor()
@@ -12,6 +14,7 @@ void free_editor()
     for (int i = 0; i < editor.buffersCount; i++) {
         free_buffer(editor.buffers[i]);
     }
+    log_close(editor.log);
 }
 void editor_next_buffer() { editor.currentBuffer = (editor.currentBuffer + 1) % editor.buffersCount; }
 
