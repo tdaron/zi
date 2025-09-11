@@ -1,20 +1,20 @@
 #include "io.h"
 
 Log log_init() {
-    Log log = { 0 };
+    Log logFileHandle = { 0 };
     
-    log.startTime = time(NULL);
-    log.file = fopen(LOG_FILENAME, "w");
+    logFileHandle.startTime = time(NULL);
+    logFileHandle.file = fopen(LOG_FILENAME, "w");
 
-    return log;
+    return logFileHandle;
 }
 
-void log_close(Log log) {
-    if (log.file) fclose(log.file);
+void log_close(Log logFileHandle) {
+    if (logFileHandle.file) fclose(logFileHandle.file);
 }
 
-void log_print(Log log, String_View message, LOG_PRIORITY priority) {
-    if (!log.file) return;
+void log(Log logFileHandle, String_View message, LOG_PRIORITY priority) {
+    if (!logFileHandle.file) return;
 
     if (priority > _LOG_COUNT) return;
     char *priorityMessage[_LOG_COUNT];
@@ -22,8 +22,12 @@ void log_print(Log log, String_View message, LOG_PRIORITY priority) {
     priorityMessage[LOG_WARNING] = "Warning";
     priorityMessage[LOG_FATAL] = "Fatal";
 
-    snprintf(log.buffer, MAX_LOG_SIZE, "[%s - %lds] %s", priorityMessage[priority], time(NULL)-log.startTime, message.data);
-    fwrite(log.buffer, 1, strlen(log.buffer), log.file);
+    snprintf(logFileHandle.buffer, MAX_LOG_SIZE, "[%s - %lds] %s", 
+        priorityMessage[priority], 
+        time(NULL)-logFileHandle.startTime, 
+        message.data
+    );
+    fwrite(logFileHandle.buffer, 1, strlen(logFileHandle.buffer), logFileHandle.file);
     // Logs appear on the spot
-    fflush(log.file);
+    fflush(logFileHandle.file);
 }

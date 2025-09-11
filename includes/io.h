@@ -24,7 +24,7 @@ typedef struct {
 } Log;
 
 Log log_init();
-void log_close(Log log);
-void log_print(Log log, String_View message, LOG_PRIORITY priority);
+void log_close(Log logFileHandle);
+void log(Log logFileHandle, String_View message, LOG_PRIORITY priority);
 
 #endif // IO_H
