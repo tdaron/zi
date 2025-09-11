@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 #define LOG_FILENAME ".zi_log"
-#define MAX_LOG_SIZE 64
 
 typedef enum { 
     LOG_INFO, 
@@ -20,11 +19,10 @@ typedef enum {
 typedef struct {
     time_t startTime;
     FILE *file;
-    char buffer[MAX_LOG_SIZE];
 } Log;
 
 Log log_init();
 void log_close(Log logFileHandle);
-void log(Log logFileHandle, String_View message, LOG_PRIORITY priority);
+void log_print(Log logFileHandle, const char *message, LOG_PRIORITY priority);
 
 #endif // IO_H

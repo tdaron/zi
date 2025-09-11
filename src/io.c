@@ -13,7 +13,7 @@ void log_close(Log logFileHandle) {
     if (logFileHandle.file) fclose(logFileHandle.file);
 }
 
-void log(Log logFileHandle, String_View message, LOG_PRIORITY priority) {
+void log_print(Log logFileHandle, const char *message, LOG_PRIORITY priority) {
     if (!logFileHandle.file) return;
 
     if (priority > _LOG_COUNT) return;
@@ -22,12 +22,11 @@ void log(Log logFileHandle, String_View message, LOG_PRIORITY priority) {
     priorityMessage[LOG_WARNING] = "Warning";
     priorityMessage[LOG_FATAL] = "Fatal";
 
-    snprintf(logFileHandle.buffer, MAX_LOG_SIZE, "[%s - %lds] %s", 
+    fprintf(logFileHandle.file, "[%s - %lds] %s\n",
         priorityMessage[priority], 
         time(NULL)-logFileHandle.startTime, 
-        message.data
+        message
     );
-    fwrite(logFileHandle.buffer, 1, strlen(logFileHandle.buffer), logFileHandle.file);
     // Logs appear on the spot
     fflush(logFileHandle.file);
 }
