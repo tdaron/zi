@@ -64,7 +64,7 @@ void insert_char(Buffer* b, char c)
 
     // Gap is filled
     if (b->ccur == b->cend) {
-        log_print(editor.logFileHandle, "realloc...", LOG_INFO);
+        log_print("realloc...", LOG_INFO);
         int offset = b->ccur - b->buf;
         int to_cpy = (b->buf + b->length) - b->cend;
         b->buf = realloc(b->buf, b->length + GAP_SIZE);

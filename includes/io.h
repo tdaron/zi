@@ -23,6 +23,6 @@ typedef struct {
 
 Log log_init();
 void log_close(Log logFileHandle);
-void log_print(Log logFileHandle, const char *message, LOG_PRIORITY priority);
+void log_print(const char *message, LOG_PRIORITY priority);
 
 #endif // IO_H

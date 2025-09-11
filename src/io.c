@@ -1,4 +1,5 @@
 #include "io.h"
+#include <editor.h>
 
 Log log_init() {
     Log logFileHandle = { 0 };
@@ -13,7 +14,8 @@ void log_close(Log logFileHandle) {
     if (logFileHandle.file) fclose(logFileHandle.file);
 }
 
-void log_print(Log logFileHandle, const char *message, LOG_PRIORITY priority) {
+void log_print(const char *message, LOG_PRIORITY priority) {
+    Log logFileHandle = editor.logFileHandle;
     if (!logFileHandle.file) return;
 
     if (priority > _LOG_COUNT) return;
