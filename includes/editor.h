@@ -4,8 +4,20 @@
 #include "buffer.h"
 #include "termgfx.h"
 #include <stdbool.h>
+#include <sv.h>
 
-typedef enum { NORMAL_MODE, INSERT_MODE, COMMAND_MODE } EDITOR_MODE;
+typedef enum { NORMAL_MODE, INSERT_MODE, INPUT_MODE } EDITOR_MODE;
+
+typedef void (*CALLBACK_FN)(String_View input);
+
+
+typedef struct {
+    String_View prefix;
+    char input[256];
+    int  length;
+    CALLBACK_FN callback;
+    
+} UserInput;
 
 typedef struct {
     Buffer* buffers[10];
@@ -14,6 +26,8 @@ typedef struct {
     char* message;
     EDITOR_MODE mode;
     bool shouldClose;
+    UserInput userInput;
+
 } Editor;
 
 extern Editor editor;
@@ -23,5 +37,6 @@ void editor_set_current_buffer(int buffer);
 void free_editor();
 void editor_next_buffer();
 void editor_handle_event(tg_event* event);
+void editor_input_mode(String_View prefix, CALLBACK_FN callback);
 
 #endif

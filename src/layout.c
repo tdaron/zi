@@ -46,10 +46,23 @@ void statusBar()
         }
     }
 }
-void message()
+
+
+
+void bottomline()
 {
     CLAY({ .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(1) } } })
     {
+        if (editor.mode == INPUT_MODE) {
+            Clay_String input = {
+                .isStaticallyAllocated = true,
+                .chars = editor.userInput.input,
+                .length = editor.userInput.length
+            };
+
+            CLAY_TEXT(SV_TO_CLAY(editor.userInput.prefix), CLAY_TEXT_CONFIG({.textColor = ACTIVE_BUFFER}));
+            CLAY_TEXT(input, CLAY_TEXT_CONFIG({.textColor = ACTIVE_BUFFER}));
+        }
         if (editor.message != 0) {
             char* n = editor.message;
             Clay_String message = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
@@ -71,7 +84,7 @@ Clay_RenderCommandArray layout()
         CLAY({ .custom = { .customData = "content" },
             .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0) } } });
         statusBar();
-        message();
+        bottomline();
     }
     Clay_RenderCommandArray renderCommands = Clay_EndLayout();
     return renderCommands;

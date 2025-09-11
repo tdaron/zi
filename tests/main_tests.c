@@ -3,6 +3,8 @@
 
 #define TUNIT_IMPLEMENTATION
 #include <tunit.h>
+#define SV_IMPLEMENTATION
+#include <sv.h>
 
 Editor editor;
 

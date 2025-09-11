@@ -2,7 +2,8 @@
 #include <editor.h>
 #include <layout.h>
 #include <renderer.h>
-
+#define SV_IMPLEMENTATION
+#include <sv.h>
 Editor editor;
 
 int main()

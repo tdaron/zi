@@ -1,9 +1,10 @@
 #include "buffer.h"
 #include "termgfx.h"
 #include <editor.h>
-void editor_open_buffer(char* name) {
-    editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0);
-}
+#include <nob.h>
+#include <string.h>
+#include <sv.h>
+void editor_open_buffer(char* name) { editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0); }
 void editor_set_current_buffer(int buffer) { editor.currentBuffer = buffer; }
 
 void free_editor()
@@ -13,6 +14,17 @@ void free_editor()
     }
 }
 void editor_next_buffer() { editor.currentBuffer = (editor.currentBuffer + 1) % editor.buffersCount; }
+
+void command_callback(String_View command)
+{
+    if (sv_eq(command, SV("q"))) {
+        editor.shouldClose = true;
+        return;
+    }
+
+    editor.message = "Unknown command :(";
+}
+
 
 void editor_handle_event(tg_event* ev)
 {
@@ -29,11 +41,25 @@ void editor_handle_event(tg_event* ev)
             if (editor.mode == INSERT_MODE) {
                 delete_chars(editor.buffers[editor.currentBuffer], 1);
             }
+            if (editor.mode == INPUT_MODE) {
+                editor.userInput.length--;
+            }
+        }
+        if (ev->data.key == TG_KEY_ENTER) {
+            if (editor.mode == INPUT_MODE) {
+                if (editor.userInput.callback)
+                    editor.mode = NORMAL_MODE;
+                    editor.userInput.callback(sv_from_parts(editor.userInput.input, editor.userInput.length));
+            }
         }
         if (ev->data.key == TG_KEY_CHAR) {
+            if (editor.mode == INPUT_MODE) {
+                editor.userInput.input[editor.userInput.length++] = ev->ch;
+            }
             if (editor.mode == INSERT_MODE) {
                 insert_char(editor.buffers[editor.currentBuffer], ev->ch);
-            } else {
+            }
+            if (editor.mode == NORMAL_MODE) {
                 if (ev->ch == 'n') {
                     editor_next_buffer();
                     editor.message = "";
@@ -41,11 +67,19 @@ void editor_handle_event(tg_event* ev)
                 if (ev->ch == 'i')
                     editor.mode = INSERT_MODE;
                 if (ev->ch == ':') {
-                    editor.message = ":some-cmd-here";
-                    editor.mode = COMMAND_MODE;
+                    editor_input_mode(SV(":"), command_callback);
                 }
             }
         }
     }
 }
 
+
+void editor_input_mode(String_View prefix, CALLBACK_FN callback)
+{
+    NOB_UNUSED(callback);
+    editor.mode = INPUT_MODE;
+    editor.userInput.length = 0;
+    editor.userInput.callback = callback;
+    editor.userInput.prefix = prefix;
+}
