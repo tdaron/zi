@@ -62,8 +62,9 @@ void bottomline()
 
             CLAY_TEXT(SV_TO_CLAY(editor.userInput.prefix), CLAY_TEXT_CONFIG({.textColor = ACTIVE_BUFFER}));
             CLAY_TEXT(input, CLAY_TEXT_CONFIG({.textColor = ACTIVE_BUFFER}));
+
         }
-        if (editor.message != 0) {
+        else if (editor.message != 0) {
             char* n = editor.message;
             Clay_String message = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
 
