@@ -75,7 +75,14 @@ int main(int argc, char** argv)
 
     Nob_File_Paths common_objs = { 0 };
 
-    const char* common_sources[] = { "src/termgfx.c", "src/buffer.c", "src/renderer.c", "src/layout.c", "src/editor.c" };
+    const char* common_sources[] = { 
+        "src/termgfx.c", 
+        "src/buffer.c", 
+        "src/renderer.c", 
+        "src/layout.c", 
+        "src/editor.c",
+        "src/io.c", 
+    };
 
 
     for (size_t i = 0; i < NOB_ARRAY_LEN(common_sources); ++i) {

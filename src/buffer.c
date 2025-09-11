@@ -1,4 +1,6 @@
 #include <buffer.h>
+#include <io.h>
+#include <editor.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,7 +64,7 @@ void insert_char(Buffer* b, char c)
 
     // Gap is filled
     if (b->ccur == b->cend) {
-        printf("realloc..\n");
+        log_print("realloc...", LOG_INFO);
         int offset = b->ccur - b->buf;
         int to_cpy = (b->buf + b->length) - b->cend;
         b->buf = realloc(b->buf, b->length + GAP_SIZE);

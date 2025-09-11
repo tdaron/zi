@@ -1,9 +1,7 @@
-#include "buffer.h"
-#include "termgfx.h"
 #include <editor.h>
 #include <nob.h>
-#include <string.h>
-#include <sv.h>
+
+void editor_open_log() { editor.logFileHandle = log_init(); }
 void editor_open_buffer(char* name) { editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0); }
 void editor_set_current_buffer(int buffer) { editor.currentBuffer = buffer; }
 
@@ -12,6 +10,7 @@ void free_editor()
     for (int i = 0; i < editor.buffersCount; i++) {
         free_buffer(editor.buffers[i]);
     }
+    log_close(editor.logFileHandle);
 }
 void editor_next_buffer() { editor.currentBuffer = (editor.currentBuffer + 1) % editor.buffersCount; }
 
