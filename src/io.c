@@ -24,11 +24,9 @@ void log_print(const char *message, LOG_PRIORITY priority) {
     priorityMessage[LOG_WARNING] = "Warning";
     priorityMessage[LOG_FATAL] = "Fatal";
 
-    fprintf(logFileHandle.file, "[%s - %lds] %s\n",
+    zi_log("[%s - %lds] %s\n",
         priorityMessage[priority], 
         time(NULL)-logFileHandle.startTime, 
         message
     );
-    // Logs appear on the spot
-    fflush(logFileHandle.file);
 }

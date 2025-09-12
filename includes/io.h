@@ -21,6 +21,12 @@ typedef struct {
     FILE *file;
 } Log;
 
+#define zi_log(fmt, ...) do { \
+    Log logFileHandle = editor.logFileHandle; \
+    fprintf(logFileHandle.file, fmt __VA_OPT__(,) __VA_ARGS__); \
+    fflush(logFileHandle.file); \
+} while (0);
+
 Log log_init();
 void log_close(Log logFileHandle);
 void log_print(const char *message, LOG_PRIORITY priority);

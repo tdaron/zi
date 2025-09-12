@@ -24,7 +24,6 @@ void command_callback(String_View command)
     editor.message = "Unknown command :(";
 }
 
-
 void editor_handle_event(tg_event* ev)
 {
     if (ev->type == TG_EV_KEY) {
