@@ -1,7 +1,6 @@
 #include <editor.h>
 #include <nob.h>
 
-void editor_open_log() { editor.logFileHandle = log_init(); }
 void editor_open_buffer(char* name) { editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0); }
 void editor_set_current_buffer(int buffer) { editor.currentBuffer = buffer; }
 

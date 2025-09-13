@@ -1,32 +1,41 @@
 #include "io.h"
 #include <editor.h>
+#include <stdarg.h>
+#include <time.h>
 
-Log log_init() {
-    Log logFileHandle = { 0 };
-    
-    logFileHandle.startTime = time(NULL);
-    logFileHandle.file = fopen(LOG_FILENAME, "w");
+void log_init() { editor.logFileHandle = fopen(LOG_FILENAME, "a"); }
 
-    return logFileHandle;
+void log_close()
+{
+    if (editor.logFileHandle)
+        fclose(editor.logFileHandle);
 }
 
-void log_close(Log logFileHandle) {
-    if (logFileHandle.file) fclose(logFileHandle.file);
-}
+void log_print(LOG_PRIORITY priority, char* fmt, ...)
+{
+    va_list parametersInfos;
+    va_start(parametersInfos, fmt);
 
-void log_print(const char *message, LOG_PRIORITY priority) {
-    Log logFileHandle = editor.logFileHandle;
-    if (!logFileHandle.file) return;
+    if (!editor.logFileHandle)
+        return;
 
-    if (priority > _LOG_COUNT) return;
-    char *priorityMessage[_LOG_COUNT];
-    priorityMessage[LOG_INFO] = "Info";
-    priorityMessage[LOG_WARNING] = "Warning";
-    priorityMessage[LOG_FATAL] = "Fatal";
+    if (priority > _LOG_COUNT)
+        return;
+    char* priorityMessage[_LOG_COUNT];
+    priorityMessage[LOG_INFO] = "INFO";
+    priorityMessage[LOG_WARNING] = "WARN";
+    priorityMessage[LOG_FATAL] = "FATAL";
 
-    zi_log("[%s - %lds] %s\n",
-        priorityMessage[priority], 
-        time(NULL)-logFileHandle.startTime, 
-        message
-    );
+    time_t raw_time;
+    struct tm* timeinfo;
+
+    time(&raw_time);
+    timeinfo = localtime(&raw_time);
+
+    fprintf(editor.logFileHandle, "[%s] %d-%02d-%02d %02d:%02d:%02d ", priorityMessage[priority],
+        timeinfo->tm_year + 1900, timeinfo->tm_mon, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min,
+        timeinfo->tm_sec);
+    vfprintf(editor.logFileHandle, fmt, parametersInfos);
+    fprintf(editor.logFileHandle, "\n");
+    fflush(editor.logFileHandle);
 }

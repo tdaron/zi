@@ -32,12 +32,11 @@ typedef struct {
     bool shouldClose;
     UserInput userInput;
 
-    Log logFileHandle; // Passed to the buffers on init 
+    FILE* logFileHandle; // Passed to the buffers on init 
 } Editor;
 
 extern Editor editor;
 
-void editor_open_log();
 void editor_open_buffer(char* name);
 void editor_set_current_buffer(int buffer);
 void free_editor();
