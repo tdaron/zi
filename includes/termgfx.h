@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <termios.h>
+#include <clay.h>
 
 extern int operations;
 
@@ -42,15 +43,10 @@ typedef struct {
     char ch;
 } tg_event;
 
-typedef struct {
-    int r;
-    int g;
-    int b;
-} Color;
 
 typedef struct {
-    Color fg;
-    Color bg;
+    Clay_Color fg;
+    Clay_Color bg;
     char value[4]; // UTF-8 bytes
     int n_bytes;
 } Cell;
@@ -60,8 +56,7 @@ typedef struct {
 // I expect that no one will actually use this color
 // as something else than TRANSPARENT
 // in a theme or something. (just go full white lmao)
-#define TRANSPARENT &(Color){255, 254, 253}
-#define CLAY_TO_TERM_COLOR(color) &(Color){color.r, color.g, color.b}
+#define TRANSPARENT &(Clay_Color){255, 254, 253, 255}
 
 void tg_cursor_hide(void);
 void tg_cursor_show(void);
@@ -72,8 +67,8 @@ void tg_alt_screen_enable(void);
 void tg_alt_screen_disable(void);
 
 // --- Drawing ---
-void tg_set_fg(Color *c);
-void tg_set_bg(Color* c);
+void tg_set_fg(Clay_Color *c);
+void tg_set_bg(Clay_Color* c);
 void tg_draw_box(int x, int y, int w, int h, char c);
 
 // Those functions returns the number of cells used in x axis

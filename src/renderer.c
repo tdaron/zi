@@ -4,6 +4,7 @@
 #include <renderer.h>
 #include <stdio.h>
 #include <termgfx.h>
+#include <palette.h>
 
 void draw(Clay_RenderCommandArray renderCommands)
 {
@@ -14,7 +15,7 @@ void draw(Clay_RenderCommandArray renderCommands)
         case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
             Clay_BoundingBox box = renderCommand->boundingBox;
             Clay_Color color = renderCommand->renderData.rectangle.backgroundColor;
-            tg_set_bg(CLAY_TO_TERM_COLOR(color));
+            tg_set_bg(&color);
             tg_draw_box(box.x, box.y, box.width, box.height, ' ');
             break;
         }
@@ -22,7 +23,7 @@ void draw(Clay_RenderCommandArray renderCommands)
         case CLAY_RENDER_COMMAND_TYPE_TEXT: {
             Clay_Color color = renderCommand->renderData.text.textColor;
             tg_set_bg(TRANSPARENT);
-            tg_set_fg(CLAY_TO_TERM_COLOR(color));
+            tg_set_fg(&color);
             tg_print_text_with_length(renderCommand->boundingBox.x, renderCommand->boundingBox.y,
                 renderCommand->renderData.text.stringContents.chars,
                 renderCommand->renderData.text.stringContents.length);
@@ -35,12 +36,12 @@ void draw(Clay_RenderCommandArray renderCommands)
             int length1, length2;
             get_contents(editor.buffers[editor.currentBuffer], &slice1, &length1, &slice2, &length2);
             tg_set_bg(TRANSPARENT);
-            tg_set_fg(&(Color) { 255, 255, 255 });
+            tg_set_fg(&(Clay_Color) { 255, 255, 255, 255 });
             int s1l = tg_print_text_with_length(box.x, box.y, slice1, length1);
             // TODO: Proper compute display size of slice1
             int s2l = tg_print_text_with_length(box.x + length1, box.y, slice2, length2);
             if (editor.mode == INSERT_MODE) {
-                tg_set_bg(&(Color) { 255, 255, 255 });
+                tg_set_bg(&(Clay_Color)CURSOR_COLOR);
                 tg_print_text(box.x + s1l + s2l, box.y, " ");
             }
 

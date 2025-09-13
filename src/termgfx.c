@@ -19,25 +19,25 @@ int operations;
 // --- Saved terminal state ---
 static struct termios tg_old_termios;
 static int tg_term_w = 80, tg_term_h = 24;
-Color current_fg;
-Color current_bg;
+Clay_Color current_fg;
+Clay_Color current_bg;
 
 void tg_move(int x, int y) { printf("\x1b[%d;%dH", y + 1, x + 1); }
 
-// --- Color helpers ---
-void _term_tg_set_fg(Color* c) { printf("\x1b[38;2;%d;%d;%dm", c->r, c->g, c->b); }
-void _term_tg_set_bg(Color* c) { printf("\x1b[48;2;%d;%d;%dm", c->r, c->g, c->b); }
+// --- Clay_Color helpers ---
+void _term_tg_set_fg(Clay_Color* c) { printf("\x1b[38;2;%d;%d;%dm", (int)c->r, (int)c->g, (int)c->b); }
+void _term_tg_set_bg(Clay_Color* c) { printf("\x1b[48;2;%d;%d;%dm", (int)c->r, (int)c->g, (int)c->b); }
 
-bool same_color(Color* a, Color* b) { return a->b == b->b && a->g == b->g && a->r == b->r; }
-void copy_color(Color* dest, Color* src)
+bool same_color(Clay_Color* a, Clay_Color* b) { return a->b == b->b && a->g == b->g && a->r == b->r; }
+void copy_color(Clay_Color* dest, Clay_Color* src)
 {
     dest->r = src->r;
     dest->g = src->g;
     dest->b = src->b;
 }
 
-void tg_set_bg(Color* c) { copy_color(&current_bg, c); }
-void tg_set_fg(Color* c) { copy_color(&current_fg, c); }
+void tg_set_bg(Clay_Color* c) { copy_color(&current_bg, c); }
+void tg_set_fg(Clay_Color* c) { copy_color(&current_fg, c); }
 void tg_reset(void)
 {
     printf("\x1b[0m");
