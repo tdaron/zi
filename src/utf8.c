@@ -1,0 +1,55 @@
+#include <stdio.h>
+#include <utf8.h>
+
+
+// Those providers are providers of char for the read_utf8_char function
+// as it can consume a variable number of chars.
+
+// Get chars from stdin (user input)
+int getchar_provider(void* _) {
+    return getchar();
+}
+
+// Get chars from a buffer
+int buffer_provider(void* d) {
+    bufferProviderData* data = d;
+    return data->buf[data->pos++];
+}
+
+
+int read_utf8_char(char* buf, int (*provider)(void* userData), void* userData)
+{
+    int c = provider(userData);
+    if (c == EOF)
+        return EOF;
+
+    unsigned char b = (unsigned char)c;
+    buf[0] = b;
+
+    if (b < 0x80) {
+        // 1-byte ASCII
+        buf[1] = '\0';
+        return 1;
+    }
+
+    int n_bytes;
+    if ((b & 0xE0) == 0xC0)
+        n_bytes = 2;
+    else if ((b & 0xF0) == 0xE0)
+        n_bytes = 3;
+    else if ((b & 0xF8) == 0xF0)
+        n_bytes = 4;
+    else
+        return -1; // invalid UTF-8
+
+    for (int i = 1; i < n_bytes; i++) {
+        int next = provider(userData);
+        if (next == EOF)
+            return EOF;
+        unsigned char nb = (unsigned char)next;
+        if ((nb & 0xC0) != 0x80)
+            return -1; // invalid continuation
+        buf[i] = nb;
+    }
+    return n_bytes;
+}

@@ -1,5 +1,3 @@
-#include "io.h"
-#include <ctype.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -11,7 +9,7 @@
 #include <termgfx.h>
 #include <termios.h>
 #include <unistd.h>
-#include <wctype.h>
+#include <utf8.h>
 
 Cell* framebuffer = NULL;
 Cell* backbuffer = NULL;
@@ -76,28 +74,39 @@ void tg_draw_box(int x, int y, int w, int h, char c)
 {
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
-            backbuffer[(x + i) + tg_term_w * (y + j)].value = c;
+            backbuffer[(x + i) + tg_term_w * (y + j)].value[0] = c;
+            backbuffer[(x + i) + tg_term_w * (y + j)].n_bytes = 1;
             paint_color(x + i, y + j);
         }
     }
 }
-void tg_print_text(int x, int y, const char* s)
+int tg_print_text(int x, int y, const char* s)
 {
+    bufferProviderData data = {s, 0};
+    char buf[4];
     int i = 0;
-    while (s[i] != '\0') {
-        backbuffer[x + i + tg_term_w * y].value = s[i];
+    while (s[data.pos] != '\0') {
+        int n_bytes = read_utf8_char(buf, buffer_provider, &data);
+        memcpy(backbuffer[x + i + tg_term_w * y].value, buf, n_bytes);
+        backbuffer[x + i + tg_term_w * y].n_bytes = n_bytes;
         paint_color(x, y);
         i++;
     }
+    return i;
 }
-void tg_print_text_with_length(int x, int y, const char* s, int length)
+int tg_print_text_with_length(int x, int y, const char* s, int length)
 {
+    bufferProviderData data = {s, 0};
+    char buf[4];
     int i = 0;
-    while (i < length) {
-        backbuffer[x + i + tg_term_w * y].value = s[i];
+    while (data.pos < length) {
+        int n_bytes = read_utf8_char(buf, buffer_provider, &data);
+        memcpy(backbuffer[x + i + tg_term_w * y].value, buf, n_bytes);
+        backbuffer[x + i + tg_term_w * y].n_bytes = n_bytes;
         paint_color(x + i, y);
         i++;
     }
+    return i;
 }
 
 void tg_flush()
@@ -139,7 +148,8 @@ void tg_flush()
                 operations++;
                 tg_move(x, y);
             }
-            putchar(c->value);
+            for (int i = 0; i < c->n_bytes; i++)
+                putchar(c->value[i]);
             operations++;
         }
     }
@@ -234,49 +244,12 @@ void tg_wait_for_keypress(int timeout_ms)
     return; // timeout or no data
 }
 
-int read_utf8_char(char* buf)
-{
-    int c = getchar();
-    if (c == EOF)
-        return EOF;
-
-    unsigned char b = (unsigned char)c;
-    buf[0] = b;
-
-    if (b < 0x80) {
-        // 1-byte ASCII
-        buf[1] = '\0';
-        return 1;
-    }
-
-    int n_bytes;
-    if ((b & 0xE0) == 0xC0)
-        n_bytes = 2;
-    else if ((b & 0xF0) == 0xE0)
-        n_bytes = 3;
-    else if ((b & 0xF8) == 0xF0)
-        n_bytes = 4;
-    else
-        return -1; // invalid UTF-8
-
-    for (int i = 1; i < n_bytes; i++) {
-        int next = getchar();
-        if (next == EOF)
-            return EOF;
-        unsigned char nb = (unsigned char)next;
-        if ((nb & 0xC0) != 0x80)
-            return -1; // invalid continuation
-        buf[i] = nb;
-    }
-    return n_bytes;
-}
-
 // returns TG_EV_NONE if no event
 tg_event tg_get_event(void)
 {
     tg_event ev = { 0 };
     char fullChar[4];
-    int n_bytes = read_utf8_char(fullChar);
+    int n_bytes = read_utf8_char(fullChar, getchar_provider, NULL);
     char c = fullChar[0];
     if (c == EOF)
         return ev;

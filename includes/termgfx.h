@@ -51,7 +51,8 @@ typedef struct {
 typedef struct {
     Color fg;
     Color bg;
-    int value; // UTF-8 codepoint
+    char value[4]; // UTF-8 bytes
+    int n_bytes;
 } Cell;
 
 
@@ -74,8 +75,14 @@ void tg_alt_screen_disable(void);
 void tg_set_fg(Color *c);
 void tg_set_bg(Color* c);
 void tg_draw_box(int x, int y, int w, int h, char c);
-void tg_print_text(int x, int y, const char* s);
-void tg_print_text_with_length(int x, int y, const char* s, int length);
+
+// Those functions returns the number of cells used in x axis
+// Useful to know where to put the cursor at
+int tg_print_text(int x, int y, const char* s);
+int tg_print_text_with_length(int x, int y, const char* s, int length);
+
+
+
 void tg_flush();
 
 // --- Raw mode ---

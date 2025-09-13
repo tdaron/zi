@@ -36,12 +36,12 @@ void draw(Clay_RenderCommandArray renderCommands)
             get_contents(editor.buffers[editor.currentBuffer], &slice1, &length1, &slice2, &length2);
             tg_set_bg(TRANSPARENT);
             tg_set_fg(&(Color) { 255, 255, 255 });
-            tg_print_text_with_length(box.x, box.y, slice1, length1);
+            int s1l = tg_print_text_with_length(box.x, box.y, slice1, length1);
             // TODO: Proper compute display size of slice1
-            tg_print_text_with_length(box.x + length1, box.y, slice2, length2);
+            int s2l = tg_print_text_with_length(box.x + length1, box.y, slice2, length2);
             if (editor.mode == INSERT_MODE) {
                 tg_set_bg(&(Color) { 255, 255, 255 });
-                tg_print_text(box.x + length1 + length2, box.y, " ");
+                tg_print_text(box.x + s1l + s2l, box.y, " ");
             }
 
             break;

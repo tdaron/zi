@@ -81,6 +81,7 @@ int main(int argc, char** argv)
         "src/renderer.c", 
         "src/layout.c", 
         "src/editor.c",
+        "src/utf8.c",
         "src/io.c", 
     };
 
