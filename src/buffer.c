@@ -1,9 +1,10 @@
 #include <buffer.h>
-#include <io.h>
 #include <editor.h>
+#include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <utf8.h>
 #define GAP_SIZE 256
 
 // This implementation follows the Gap Buffer datastructure.
@@ -79,8 +80,10 @@ void delete_chars(Buffer* b, int n)
 {
     // Avoid erasing in the infinity lol
     while (n > 0 && b->ccur > b->buf) {
-        b->ccur--;
-        n--;
+        int length = utf8_prev_char_len(b->buf, b->ccur - b->buf - 1);
+        if (length == -1) break;
+        b->ccur -= length;
+        n -= 1;
     }
 }
 
@@ -92,8 +95,7 @@ void print_buffer(Buffer* b)
         return;
     }
     printf("%.*s#", (int)(b->ccur - b->buf), b->buf);
-    printf("%.*s (%d)\n", (int)((b->buf + b->length) - b->cend), b->cend,
-        content_length(b));
+    printf("%.*s (%d)\n", (int)((b->buf + b->length) - b->cend), b->cend, content_length(b));
 }
 
 char* get_raw_content(Buffer* b)
@@ -105,10 +107,7 @@ char* get_raw_content(Buffer* b)
     return b->raw;
 }
 
-int get_cursor_position(Buffer* b)
-{
-    return b->ccur - b->buf;
-}
+int get_cursor_position(Buffer* b) { return b->ccur - b->buf; }
 
 void clear(Buffer* b)
 {
