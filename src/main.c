@@ -1,14 +1,16 @@
 #include <buffer.h>
 #include <editor.h>
+#include <io.h>
 #include <layout.h>
 #include <renderer.h>
-#include <io.h>
 #define SV_IMPLEMENTATION
+#include <locale.h>
 #include <sv.h>
 Editor editor;
 
 int main()
 {
+    setlocale(LC_ALL, "en_US.UTF-8");
     log_init();
     log_print(LOG_INFO, "zi is booting...");
     init_renderer();

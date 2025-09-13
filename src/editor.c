@@ -54,7 +54,10 @@ void editor_handle_event(tg_event* ev)
                 editor.userInput.input[editor.userInput.length++] = ev->ch;
             }
             if (editor.mode == INSERT_MODE) {
-                insert_char(editor.buffers[editor.currentBuffer], ev->ch);
+                log_print(LOG_INFO, "Inserting %d bytes.", ev->n_bytes);
+                for (int i = 0; i < ev->n_bytes; i++) {
+                    insert_char(editor.buffers[editor.currentBuffer], ev->fullChar[i]);
+                }
             }
             if (editor.mode == NORMAL_MODE) {
                 if (ev->ch == 'n') {

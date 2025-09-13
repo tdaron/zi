@@ -1,3 +1,4 @@
+#include "io.h"
 #include <ctype.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -10,6 +11,7 @@
 #include <termgfx.h>
 #include <termios.h>
 #include <unistd.h>
+#include <wctype.h>
 
 Cell* framebuffer = NULL;
 Cell* backbuffer = NULL;
@@ -21,7 +23,6 @@ static struct termios tg_old_termios;
 static int tg_term_w = 80, tg_term_h = 24;
 Color current_fg;
 Color current_bg;
-
 
 void tg_move(int x, int y) { printf("\x1b[%d;%dH", y + 1, x + 1); }
 
@@ -37,16 +38,10 @@ void copy_color(Color* dest, Color* src)
     dest->b = src->b;
 }
 
-
-void tg_set_bg(Color* c)
+void tg_set_bg(Color* c) { copy_color(&current_bg, c); }
+void tg_set_fg(Color* c) { copy_color(&current_fg, c); }
+void tg_reset(void)
 {
-    copy_color(&current_bg, c);
-}
-void tg_set_fg(Color* c)
-{
-    copy_color(&current_fg, c);
-}
-void tg_reset(void) {
     printf("\x1b[0m");
     current_fg.r = 255;
     current_fg.g = 255;
@@ -55,8 +50,6 @@ void tg_reset(void) {
     current_bg.g = 0;
     current_bg.b = 0;
     tg_move(0, 0);
-
-
 }
 
 // --- Cursor helpers ---
@@ -67,8 +60,6 @@ void tg_cursor_show(void) { printf("\x1b[?25h"); }
 void tg_clear(void) { printf("\x1b[2J\x1b[H"); }
 void tg_alt_screen_enable(void) { printf("\x1b[?1049h"); }
 void tg_alt_screen_disable(void) { printf("\x1b[?1049l"); }
-
-
 
 void paint_color(int x, int y)
 {
@@ -108,7 +99,6 @@ void tg_print_text_with_length(int x, int y, const char* s, int length)
         i++;
     }
 }
-
 
 void tg_flush()
 {
@@ -244,11 +234,50 @@ void tg_wait_for_keypress(int timeout_ms)
     return; // timeout or no data
 }
 
+int read_utf8_char(char* buf)
+{
+    int c = getchar();
+    if (c == EOF)
+        return EOF;
+
+    unsigned char b = (unsigned char)c;
+    buf[0] = b;
+
+    if (b < 0x80) {
+        // 1-byte ASCII
+        buf[1] = '\0';
+        return 1;
+    }
+
+    int n_bytes;
+    if ((b & 0xE0) == 0xC0)
+        n_bytes = 2;
+    else if ((b & 0xF0) == 0xE0)
+        n_bytes = 3;
+    else if ((b & 0xF8) == 0xF0)
+        n_bytes = 4;
+    else
+        return -1; // invalid UTF-8
+
+    for (int i = 1; i < n_bytes; i++) {
+        int next = getchar();
+        if (next == EOF)
+            return EOF;
+        unsigned char nb = (unsigned char)next;
+        if ((nb & 0xC0) != 0x80)
+            return -1; // invalid continuation
+        buf[i] = nb;
+    }
+    return n_bytes;
+}
+
 // returns TG_EV_NONE if no event
 tg_event tg_get_event(void)
 {
     tg_event ev = { 0 };
-    int c = getchar();
+    char fullChar[4];
+    int n_bytes = read_utf8_char(fullChar);
+    char c = fullChar[0];
     if (c == EOF)
         return ev;
 
@@ -298,10 +327,14 @@ tg_event tg_get_event(void)
         ev.data.key = TG_KEY_ENTER;
     else if (c == 127 || c == 8)
         ev.data.key = TG_KEY_BACKSPACE;
-    else if (isprint(c)) {
+
+    // TODO: Check if UTF8 is valid.
+    // else if (iswprint(c)) {
+    else {
         ev.data.key = TG_KEY_CHAR;
-        ev.ch = (char)c;
-    } else
-        ev.data.key = TG_KEY_UNKNOWN;
+        ev.n_bytes = n_bytes;
+        memcpy(ev.fullChar, fullChar, 4 * sizeof(char));
+        ev.ch = c;
+    }
     return ev;
 }

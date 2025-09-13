@@ -1,6 +1,7 @@
 #ifndef TG_H
 #define TG_H
 
+#include <stdbool.h>
 #include <termios.h>
 
 extern int operations;
@@ -36,7 +37,9 @@ typedef struct {
         tg_key key;
         tg_mouse mouse;
     } data;
-    char ch; // valid if key == TG_KEY_CHAR
+    char fullChar[4]; // valid if key == TG_KEY_CHAR - UTF8
+    int n_bytes;
+    char ch;
 } tg_event;
 
 typedef struct {

@@ -13,6 +13,8 @@ typedef struct {
     char* name;
 } Buffer;
 
+
+
 Buffer* new_buffer(char* name, char* content, int length);
 void print_buffer(Buffer* b);
 void insert_char(Buffer* b, char c);
