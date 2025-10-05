@@ -18,6 +18,8 @@ Buffer* new_buffer(char* name, char* content, int length)
     b->length = length + GAP_SIZE;
     b->raw = NULL;
     b->name = name;
+    b->cursorX = 0;
+    b->cursorY = 0;
     memcpy(b->cend, content, length * sizeof(char));
     return b;
 }
@@ -59,9 +61,21 @@ void move_cursor(Buffer* b, int offset)
     b->cend = new_cend;
 }
 
+void insert_char_bytes(Buffer* b, char* bytes, int length)
+{
+    b->cursorX++;
+    for (int i = 0; i < length; i++) {
+        insert_char(b, bytes[i]);
+    }
+}
+
 void insert_char(Buffer* b, char c)
 {
     *(b->ccur++) = c;
+    if (c == '\n') {
+        b->cursorX = 0;
+        b->cursorY++;
+    }
 
     // Gap is filled
     if (b->ccur == b->cend) {
@@ -78,13 +92,18 @@ void insert_char(Buffer* b, char c)
 
 void delete_chars(Buffer* b, int n)
 {
+    int total = n;
     // Avoid erasing in the infinity lol
     while (n > 0 && b->ccur > b->buf) {
         int length = utf8_prev_char_len(b->buf, b->ccur - b->buf - 1);
-        if (length == -1) break;
+        if (length == -1)
+            break;
         b->ccur -= length;
         n -= 1;
     }
+
+    //TODO: Support getting to the end of the previous line
+    b->cursorX -= total;
 }
 
 int content_length(Buffer* b) { return b->length - (b->cend - b->ccur); }

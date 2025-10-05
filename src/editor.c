@@ -25,6 +25,7 @@ void command_callback(String_View command)
 
 void editor_handle_event(tg_event* ev)
 {
+    Buffer* current_buffer = editor.buffers[editor.currentBuffer];
     if (ev->type == TG_EV_KEY) {
         if (ev->data.key == TG_KEY_ESC) {
             if (editor.mode == NORMAL_MODE) {
@@ -46,7 +47,10 @@ void editor_handle_event(tg_event* ev)
             if (editor.mode == INPUT_MODE) {
                 if (editor.userInput.callback)
                     editor.mode = NORMAL_MODE;
-                    editor.userInput.callback(sv_from_parts(editor.userInput.input, editor.userInput.length));
+                editor.userInput.callback(sv_from_parts(editor.userInput.input, editor.userInput.length));
+            }
+            if (editor.mode == INSERT_MODE) {
+                insert_char(editor.buffers[editor.currentBuffer], '\n');
             }
         }
         if (ev->data.key == TG_KEY_CHAR) {
@@ -54,9 +58,7 @@ void editor_handle_event(tg_event* ev)
                 editor.userInput.input[editor.userInput.length++] = ev->ch;
             }
             if (editor.mode == INSERT_MODE) {
-                for (int i = 0; i < ev->n_bytes; i++) {
-                    insert_char(editor.buffers[editor.currentBuffer], ev->fullChar[i]);
-                }
+                insert_char_bytes(editor.buffers[editor.currentBuffer], ev->fullChar, ev->n_bytes);
             }
             if (editor.mode == NORMAL_MODE) {
                 if (ev->ch == 'n') {
@@ -72,7 +74,6 @@ void editor_handle_event(tg_event* ev)
         }
     }
 }
-
 
 void editor_input_mode(String_View prefix, CALLBACK_FN callback)
 {

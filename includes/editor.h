@@ -7,7 +7,6 @@
 #include <termgfx.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
 #include <sv.h>
 
 typedef enum { NORMAL_MODE, INSERT_MODE, INPUT_MODE } EDITOR_MODE;

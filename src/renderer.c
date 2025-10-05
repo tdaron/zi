@@ -9,6 +9,7 @@
 void draw(Clay_RenderCommandArray renderCommands)
 {
     tg_update_size();
+    Buffer* current_buffer = editor.buffers[editor.currentBuffer];
     for (int i = 0; i < renderCommands.length; i++) {
         Clay_RenderCommand* renderCommand = &renderCommands.internalArray[i];
         switch (renderCommand->commandType) {
@@ -34,7 +35,7 @@ void draw(Clay_RenderCommandArray renderCommands)
             Clay_BoundingBox box = renderCommand->boundingBox;
             char *slice1, *slice2;
             int length1, length2;
-            get_contents(editor.buffers[editor.currentBuffer], &slice1, &length1, &slice2, &length2);
+            get_contents(current_buffer, &slice1, &length1, &slice2, &length2);
             tg_set_bg(TRANSPARENT);
             tg_set_fg(&(Clay_Color) { 255, 255, 255, 255 });
             int s1l = tg_print_text_with_length(box.x, box.y, slice1, length1);
@@ -42,7 +43,7 @@ void draw(Clay_RenderCommandArray renderCommands)
             int s2l = tg_print_text_with_length(box.x + length1, box.y, slice2, length2);
             if (editor.mode == INSERT_MODE) {
                 tg_set_bg(&(Clay_Color)CURSOR_COLOR);
-                tg_print_text(box.x + s1l + s2l, box.y, " ");
+                tg_print_text(box.x + current_buffer->cursorX, box.y+ current_buffer->cursorY, " ");
             }
 
             break;

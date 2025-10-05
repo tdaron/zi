@@ -82,17 +82,7 @@ void tg_draw_box(int x, int y, int w, int h, char c)
 }
 int tg_print_text(int x, int y, const char* s)
 {
-    bufferProviderData data = {s, 0};
-    char buf[4];
-    int i = 0;
-    while (s[data.pos] != '\0') {
-        int n_bytes = read_utf8_char(buf, buffer_provider, &data);
-        memcpy(backbuffer[x + i + tg_term_w * y].value, buf, n_bytes);
-        backbuffer[x + i + tg_term_w * y].n_bytes = n_bytes;
-        paint_color(x, y);
-        i++;
-    }
-    return i;
+    return tg_print_text_with_length(x, y, s, strlen(s));
 }
 int tg_print_text_with_length(int x, int y, const char* s, int length)
 {
@@ -101,6 +91,11 @@ int tg_print_text_with_length(int x, int y, const char* s, int length)
     int i = 0;
     while (data.pos < length) {
         int n_bytes = read_utf8_char(buf, buffer_provider, &data);
+        if (buf[0] == '\n') {
+            i = 0;
+            y++;
+            continue;
+        }
         memcpy(backbuffer[x + i + tg_term_w * y].value, buf, n_bytes);
         backbuffer[x + i + tg_term_w * y].n_bytes = n_bytes;
         paint_color(x + i, y);
