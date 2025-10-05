@@ -1,10 +1,10 @@
 #include "editor.h"
 #include <buffer.h>
 #include <clay.h>
+#include <palette.h>
 #include <renderer.h>
 #include <stdio.h>
 #include <termgfx.h>
-#include <palette.h>
 
 void draw(Clay_RenderCommandArray renderCommands)
 {
@@ -41,10 +41,8 @@ void draw(Clay_RenderCommandArray renderCommands)
             int s1l = tg_print_text_with_length(box.x, box.y, slice1, length1);
             // TODO: Proper compute display size of slice1
             int s2l = tg_print_text_with_length(box.x + length1, box.y, slice2, length2);
-            if (editor.mode == INSERT_MODE) {
-                tg_set_bg(&(Clay_Color)CURSOR_COLOR);
-                tg_print_text(box.x + current_buffer->cursorX, box.y+ current_buffer->cursorY, " ");
-            }
+            tg_set_bg(&(Clay_Color)CURSOR_COLOR);
+            tg_print_text(box.x + current_buffer->cursorX, box.y + current_buffer->cursorY, " ");
 
             break;
         }
