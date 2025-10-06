@@ -4,3 +4,6 @@ dist/
 .vscode
 nob
 nob.old
+includes/generated_plugins.h
+build
+build.old

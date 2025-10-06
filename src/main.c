@@ -6,6 +6,8 @@
 #define SV_IMPLEMENTATION
 #include <locale.h>
 #include <sv.h>
+#include <generated_plugins.h>
+
 Editor editor;
 
 int main()
@@ -13,6 +15,11 @@ int main()
     setlocale(LC_ALL, "en_US.UTF-8");
     log_init();
     log_print(LOG_INFO, "zi is booting...");
+
+    for (int i = 0; i < PLUGINS_COUNT; i++) {
+        pluginsInitFunctions[i]();
+    }
+    
     init_renderer();
     log_print(LOG_INFO, "zi is set up !");
     editor_open_buffer("src/main.c");

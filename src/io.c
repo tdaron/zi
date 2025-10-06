@@ -16,7 +16,6 @@ void log_init()
     } else {
         ungetc(c, editor.logFileHandle);
     }
-    log_print(LOG_INFO, "aaah");
 }
 
 void log_close()
