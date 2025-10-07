@@ -7,6 +7,7 @@
 #include <termgfx.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <view.h>
 #include <sv.h>
 
 typedef enum { NORMAL_MODE, INSERT_MODE, INPUT_MODE } EDITOR_MODE;
@@ -23,9 +24,10 @@ typedef struct {
 } UserInput;
 
 typedef struct {
-    Buffer* buffers[10];
-    int buffersCount;
-    int currentBuffer;
+    // TODO: Either make a DA or a linked list
+    View views[10];
+    int viewsCount;
+    int currentView;
     char* message;
     EDITOR_MODE mode;
     bool shouldClose;
@@ -36,8 +38,8 @@ typedef struct {
 
 extern Editor editor;
 
-void editor_open_buffer(char* name);
-void editor_set_current_buffer(int buffer);
+void editor_new_view(Buffer* buf);
+void editor_set_current_view(int view_id);
 void free_editor();
 void editor_next_buffer();
 void editor_handle_event(tg_event* event);

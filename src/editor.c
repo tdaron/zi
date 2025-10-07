@@ -1,17 +1,19 @@
 #include <editor.h>
 #include <nob.h>
 
-void editor_open_buffer(char* name) { editor.buffers[editor.buffersCount++] = new_buffer(name, 0, 0); }
-void editor_set_current_buffer(int buffer) { editor.currentBuffer = buffer; }
+void editor_new_view(Buffer* buf) { editor.views[editor.viewsCount++] = (View) { buf, 0, 0 }; }
+void editor_set_current_view(int viewId) { editor.currentView = viewId; }
 
 void free_editor()
 {
-    for (int i = 0; i < editor.buffersCount; i++) {
-        free_buffer(editor.buffers[i]);
+    for (int i = 0; i < editor.viewsCount; i++) {
+        // TODO: This will double free if multiple window
+        //  on the same buffer.
+        free_buffer(editor.views[i].buffer);
     }
-    log_close(editor.logFileHandle);
+    log_close();
 }
-void editor_next_buffer() { editor.currentBuffer = (editor.currentBuffer + 1) % editor.buffersCount; }
+void editor_next_buffer() { editor.currentView = (editor.currentView + 1) % editor.viewsCount; }
 
 void command_callback(String_View command)
 {
@@ -25,7 +27,7 @@ void command_callback(String_View command)
 
 void editor_handle_event(tg_event* ev)
 {
-    Buffer* current_buffer = editor.buffers[editor.currentBuffer];
+    Buffer* current_buffer = editor.views[editor.currentView].buffer;
     if (ev->type == TG_EV_KEY) {
         if (ev->data.key == TG_KEY_ESC) {
             if (editor.mode == NORMAL_MODE) {
@@ -37,7 +39,7 @@ void editor_handle_event(tg_event* ev)
         }
         if (ev->data.key == TG_KEY_BACKSPACE) {
             if (editor.mode == INSERT_MODE) {
-                delete_chars(editor.buffers[editor.currentBuffer], 1);
+                delete_chars(current_buffer, 1);
             }
             if (editor.mode == INPUT_MODE) {
                 editor.userInput.length--;
@@ -50,7 +52,7 @@ void editor_handle_event(tg_event* ev)
                 editor.userInput.callback(sv_from_parts(editor.userInput.input, editor.userInput.length));
             }
             if (editor.mode == INSERT_MODE) {
-                insert_char(editor.buffers[editor.currentBuffer], '\n');
+                insert_char(current_buffer, '\n');
             }
         }
         if (ev->data.key == TG_KEY_CHAR) {
@@ -58,7 +60,7 @@ void editor_handle_event(tg_event* ev)
                 editor.userInput.input[editor.userInput.length++] = ev->ch;
             }
             if (editor.mode == INSERT_MODE) {
-                insert_char_bytes(editor.buffers[editor.currentBuffer], ev->fullChar, ev->n_bytes);
+                insert_char_bytes(current_buffer, ev->fullChar, ev->n_bytes);
             }
             if (editor.mode == NORMAL_MODE) {
                 if (ev->ch == 'n') {

@@ -14,11 +14,11 @@ void buffersBar()
                         CLAY_SIZING_FIT(0),
                     }, .childGap=2, }, .backgroundColor=STATUS_COLOR })
     {
-        for (int i = 0; i < editor.buffersCount; i++) {
-            char* n = editor.buffers[i]->name;
+        for (int i = 0; i < editor.viewsCount; i++) {
+            char* n = editor.views[i].buffer->name;
             Clay_String name = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
             Clay_Color c = INACTIVE_BUFFER;
-            if (i == editor.currentBuffer) {
+            if (i == editor.currentView) {
                 c = (Clay_Color)ACTIVE_BUFFER;
             }
             CLAY_TEXT(name, CLAY_TEXT_CONFIG({ .textColor = c }));
@@ -37,7 +37,7 @@ void statusBar()
         Clay_String nor = CLAY_STRING("NOR");
         Clay_String s = editor.mode == INSERT_MODE ? ins : nor;
         CLAY_TEXT(s, CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
-        char* n = editor.buffers[editor.currentBuffer]->name;
+        char* n = editor.views[editor.currentView].buffer->name;
         Clay_String name = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
         CLAY({ .layout = { .childGap = 0 } })
         {

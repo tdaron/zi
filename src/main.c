@@ -8,7 +8,7 @@
 #include <sv.h>
 #include <generated_plugins.h>
 
-Editor editor;
+Editor editor = {0};
 
 int main()
 {
@@ -22,9 +22,8 @@ int main()
     
     init_renderer();
     log_print(LOG_INFO, "zi is set up !");
-    editor_open_buffer("src/main.c");
-    editor_open_buffer("src/buffer.c");
-    editor_open_buffer("src/basic_hello.c");
+    Buffer* buf = new_buffer("src/main.c", "", 0);
+    editor_new_view(buf);
     layout_init(renderer_width(), renderer_height());
     layout_set_dimension(renderer_width(), renderer_height());
     while (render(layout())) {
