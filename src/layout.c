@@ -1,7 +1,6 @@
 #include "termgfx.h"
 #include <clay.h>
 #include <editor.h>
-#include <nob.h>
 #include <palette.h>
 #include <stdio.h>
 #include <string.h>
@@ -100,8 +99,8 @@ void HandleClayErrors(Clay_ErrorData errorData)
 // Example measure text function
 Clay_Dimensions MeasureText(Clay_StringSlice text, Clay_TextElementConfig* config, void* userData)
 {
-    NOB_UNUSED(config);
-    NOB_UNUSED(userData);
+    (void)(config);
+    (void)(userData);
     // Clay_TextElementConfig contains members such as fontId, fontSize, letterSpacing etc
     // Note: Clay_String->chars is not guaranteed to be null terminated
     return (Clay_Dimensions) { .width = text.length * 1, // <- this will only work for monospace fonts, see the

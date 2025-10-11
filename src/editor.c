@@ -1,5 +1,4 @@
 #include <editor.h>
-#include <nob.h>
 #include <utf8.h>
 #include <io.h>
 
@@ -83,7 +82,6 @@ void editor_handle_event(tg_event* ev)
 
 void editor_input_mode(String_View prefix, CALLBACK_FN callback)
 {
-    NOB_UNUSED(callback);
     editor.mode = INPUT_MODE;
     editor.userInput.length = 0;
     editor.userInput.callback = callback;
