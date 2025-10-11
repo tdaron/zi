@@ -6,16 +6,16 @@
 void log_init()
 {
     editor.logFileHandle = fopen(LOG_FILENAME, "ab+");
-    int c = fgetc(editor.logFileHandle);
-    if (c == EOF) {
-        // If the log file is empty, add UTF8-BOM at the beginning
-        // as logs might contain some utf8
-        fputc(0xEF, editor.logFileHandle);
-        fputc(0xBB, editor.logFileHandle);
-        fputc(0xBF, editor.logFileHandle);
-    } else {
-        ungetc(c, editor.logFileHandle);
-    }
+    // int c = fgetc(editor.logFileHandle);
+    // if (c == EOF) {
+    //     // If the log file is empty, add UTF8-BOM at the beginning
+    //     // as logs might contain some utf8
+    //     fputc(0xEF, editor.logFileHandle);
+    //     fputc(0xBB, editor.logFileHandle);
+    //     fputc(0xBF, editor.logFileHandle);
+    // } else {
+    //     ungetc(c, editor.logFileHandle);
+    // }
 }
 
 void log_close()
