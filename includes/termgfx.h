@@ -39,7 +39,6 @@ typedef struct {
         tg_mouse mouse;
     } data;
     char fullChar[4]; // valid if key == TG_KEY_CHAR - UTF8
-    int n_bytes;
     char ch;
 } tg_event;
 
@@ -48,7 +47,6 @@ typedef struct {
     Clay_Color fg;
     Clay_Color bg;
     char value[4]; // UTF-8 bytes
-    int n_bytes;
 } Cell;
 
 

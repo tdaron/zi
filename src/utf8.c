@@ -1,6 +1,6 @@
-#include "io.h"
 #include <stdio.h>
 #include <utf8.h>
+
 
 // Those providers are providers of char for the read_utf8_char function
 // as it can consume a variable number of chars.
@@ -27,20 +27,10 @@ int read_utf8_char(char* buf, int (*provider)(void* userData), void* userData)
     if (b < 0x80) {
         // 1-byte ASCII
         buf[1] = '\0';
-        return 1;
+        return 0;
     }
 
-    int n_bytes;
-    if ((b & 0xE0) == 0xC0)
-        n_bytes = 2;
-    else if ((b & 0xF0) == 0xE0)
-        n_bytes = 3;
-    else if ((b & 0xF8) == 0xF0)
-        n_bytes = 4;
-    else
-        return -1; // invalid UTF-8
-
-    for (int i = 1; i < n_bytes; i++) {
+    for (int i = 1; i < CHAR_LEN(b); i++) {
         int next = provider(userData);
         if (next == EOF)
             return EOF;
@@ -49,7 +39,7 @@ int read_utf8_char(char* buf, int (*provider)(void* userData), void* userData)
             return -1; // invalid continuation
         buf[i] = nb;
     }
-    return n_bytes;
+    return 0;
 }
 
 int utf8_prev_char_len(const char* buf, int pos)

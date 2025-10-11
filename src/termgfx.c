@@ -75,7 +75,6 @@ void tg_draw_box(int x, int y, int w, int h, char c)
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
             backbuffer[(x + i) + tg_term_w * (y + j)].value[0] = c;
-            backbuffer[(x + i) + tg_term_w * (y + j)].n_bytes = 1;
             paint_color(x + i, y + j);
         }
     }
@@ -90,14 +89,13 @@ int tg_print_text_with_length(int x, int y, const char* s, int length)
     char buf[4];
     int i = 0;
     while (data.pos < length) {
-        int n_bytes = read_utf8_char(buf, buffer_provider, &data);
+        read_utf8_char(buf, buffer_provider, &data);
         if (buf[0] == '\n') {
             i = 0;
             y++;
             continue;
         }
-        memcpy(backbuffer[x + i + tg_term_w * y].value, buf, n_bytes);
-        backbuffer[x + i + tg_term_w * y].n_bytes = n_bytes;
+        memcpy(backbuffer[x + i + tg_term_w * y].value, buf, CHAR_LEN(buf[0]));
         paint_color(x + i, y);
         i++;
     }
@@ -143,7 +141,7 @@ void tg_flush()
                 operations++;
                 tg_move(x, y);
             }
-            for (int i = 0; i < c->n_bytes; i++)
+            for (int i = 0; i < CHAR_LEN(c->value[0]); i++)
                 putchar(c->value[i]);
             operations++;
         }
@@ -244,7 +242,7 @@ tg_event tg_get_event(void)
 {
     tg_event ev = { 0 };
     char fullChar[4];
-    int n_bytes = read_utf8_char(fullChar, getchar_provider, NULL);
+    read_utf8_char(fullChar, getchar_provider, NULL);
     char c = fullChar[0];
     if (c == EOF)
         return ev;
@@ -300,7 +298,6 @@ tg_event tg_get_event(void)
     // else if (iswprint(c)) {
     else {
         ev.data.key = TG_KEY_CHAR;
-        ev.n_bytes = n_bytes;
         memcpy(ev.fullChar, fullChar, 4 * sizeof(char));
         ev.ch = c;
     }

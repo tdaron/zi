@@ -1,5 +1,6 @@
 #include <editor.h>
 #include <nob.h>
+#include <utf8.h>
 
 void editor_new_view(Buffer* buf) { editor.views[editor.viewsCount++] = (View) { buf, 0, 0 }; }
 void editor_set_current_view(int viewId) { editor.currentView = viewId; }
@@ -60,7 +61,7 @@ void editor_handle_event(tg_event* ev)
                 editor.userInput.input[editor.userInput.length++] = ev->ch;
             }
             if (editor.mode == INSERT_MODE) {
-                insert_char_bytes(current_buffer, ev->fullChar, ev->n_bytes);
+                insert_char_bytes(current_buffer, ev->fullChar, CHAR_LEN(ev->fullChar[0]));
             }
             if (editor.mode == NORMAL_MODE) {
                 if (ev->ch == 'n') {
