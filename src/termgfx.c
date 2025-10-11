@@ -242,10 +242,10 @@ tg_event tg_get_event(void)
 {
     tg_event ev = { 0 };
     char fullChar[4];
-    read_utf8_char(fullChar, getchar_provider, NULL);
-    char c = fullChar[0];
-    if (c == EOF)
+    if (read_utf8_char(fullChar, getchar_provider, NULL) == EOF) {
         return ev;
+    }
+    char c = fullChar[0];
 
     if (c == 0x1b) { // ESC sequence
         int c1 = getchar();

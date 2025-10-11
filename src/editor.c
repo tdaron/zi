@@ -1,6 +1,7 @@
 #include <editor.h>
 #include <nob.h>
 #include <utf8.h>
+#include <io.h>
 
 void editor_new_view(Buffer* buf) { editor.views[editor.viewsCount++] = (View) { buf, 0, 0 }; }
 void editor_set_current_view(int viewId) { editor.currentView = viewId; }
@@ -43,7 +44,7 @@ void editor_handle_event(tg_event* ev)
                 delete_chars(current_buffer, 1);
             }
             if (editor.mode == INPUT_MODE) {
-                editor.userInput.length--;
+                editor.userInput.length-=utf8_prev_char_len(editor.userInput.input, editor.userInput.length-1);
             }
         }
         if (ev->data.key == TG_KEY_ENTER) {
@@ -58,7 +59,9 @@ void editor_handle_event(tg_event* ev)
         }
         if (ev->data.key == TG_KEY_CHAR) {
             if (editor.mode == INPUT_MODE) {
-                editor.userInput.input[editor.userInput.length++] = ev->ch;
+                for (int i = 0; i < CHAR_LEN(ev->fullChar[0]); i++) {
+                    editor.userInput.input[editor.userInput.length++] = ev->fullChar[i];
+                }
             }
             if (editor.mode == INSERT_MODE) {
                 insert_char_bytes(current_buffer, ev->fullChar, CHAR_LEN(ev->fullChar[0]));

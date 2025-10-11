@@ -10,6 +10,7 @@
 
 Editor editor = {0};
 
+
 int main()
 {
     setlocale(LC_ALL, "en_US.UTF-8");

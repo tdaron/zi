@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <utf8.h>
 
-
 // Those providers are providers of char for the read_utf8_char function
 // as it can consume a variable number of chars.
 
@@ -18,8 +17,9 @@ int buffer_provider(void* d)
 int read_utf8_char(char* buf, int (*provider)(void* userData), void* userData)
 {
     int c = provider(userData);
-    if (c == EOF)
+    if (c == EOF) {
         return EOF;
+    }
 
     unsigned char b = (unsigned char)c;
     buf[0] = b;
