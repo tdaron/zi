@@ -5,16 +5,16 @@
 bool normal_handle_events(Mode* mode, tg_event* ev)
 {
     (void)mode;
+    if (ev->type != TG_EV_KEY)
+        return false;
 
-    if (ev->type == TG_EV_KEY) {
-        if (ev->data.key == TG_KEY_CHAR) {
-            switch (ev->ch) {
-            case 'q':
-                editor.shouldClose = true;
-                return true;
-            default:
-                break;
-            }
+    if (ev->data.key == TG_KEY_CHAR) {
+        switch (ev->ch) {
+        case 'q':
+            editor.shouldClose = true;
+            return true;
+        default:
+            break;
         }
     }
     return false;
