@@ -4,7 +4,7 @@
 #include <utf8.h>
 #include <vec.h>
 
-bool insert_handle_events(Mode* mode, tg_event* ev)
+static bool handle_events(Mode* mode, tg_event* ev)
 {
     (void)mode;
     (void)ev;
@@ -30,7 +30,7 @@ void go_to_insert(Mode* m, tg_event* ev)
     editor_switch_mode("insert");
 }
 
-Mode insert_mode = DEFINE_MODE("insert", "INS", insert_handle_events);
+Mode insert_mode = DEFINE_MODE("insert", "INS", handle_events);
 KeyBinding go_to_insert_kb = { "i", go_to_insert };
 
 void insert_init() { vec_push(&editor.modes, insert_mode); }

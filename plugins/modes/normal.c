@@ -2,7 +2,7 @@
 #include <editor.h>
 #include <vec.h>
 
-bool normal_handle_events(Mode* mode, tg_event* ev)
+static bool handle_events(Mode* mode, tg_event* ev)
 {
     (void)mode;
     if (ev->type != TG_EV_KEY)
@@ -20,7 +20,7 @@ bool normal_handle_events(Mode* mode, tg_event* ev)
     return false;
 }
 
-Mode normal_mode = DEFINE_MODE("normal", "NOR", normal_handle_events);
+Mode normal_mode = DEFINE_MODE("normal", "NOR", handle_events);
 void normal_init()
 {
     vec_push(&editor.modes, normal_mode);
