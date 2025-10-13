@@ -10,7 +10,6 @@
 #include <view.h>
 #include <sv.h>
 #include <vec.h>
-#include <uthash.h>
 
 typedef struct Mode Mode;
 typedef void (*CALLBACK_FN)(String_View input);
@@ -20,16 +19,15 @@ typedef void (*EVENT_HANDLER)(Mode* mode, tg_event* ev);
 typedef struct {
     const char* key;
     EVENT_HANDLER handler;
-    UT_hash_handle hh;
 } KeyBinding;
 
-#define STATIC_KEYBINDING(name, handler) {name, handler, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0 };
+typedef vec_t(KeyBinding) keybinding_vec_t;
 
 typedef struct Mode {
     char* name;
     char* short_name;
     EVENT_HANDLER events_handler;
-    KeyBinding* keymap;
+    keybinding_vec_t keybindings;
 } Mode;
 
 typedef vec_t(Mode) mode_vec_t;

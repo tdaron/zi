@@ -4,23 +4,28 @@
 
 void normal_handle_events(Mode* mode, tg_event* ev)
 {
-    KeyBinding* kb;
-    HASH_FIND(hh, mode->keymap, &ev->ch, 1, kb);
-    if (kb != NULL) {
-        kb->handler(mode, ev);
+    if (ev->type == TG_EV_KEY) {
+        if (ev->data.key == TG_KEY_CHAR) {
+
+
+            // Lookup in keybindings
+            for (int i = 0; i < mode->keybindings.length; i++) {
+                if (*mode->keybindings.data[i].key == ev->ch) mode->keybindings.data[i].handler(mode, ev);
+            }
+        }
     }
 }
 
 void handle_quit(Mode* mode, tg_event* ev) { editor.shouldClose = true; }
 
-Mode normal_mode = { .name = "normal", .short_name = "NOR", .events_handler = normal_handle_events, .keymap = NULL };
-KeyBinding quit = STATIC_KEYBINDING("q", handle_quit);
-
+Mode normal_mode = { .name = "normal", .short_name = "NOR", .events_handler = normal_handle_events, .keybindings = {0} };
+KeyBinding quit = {"q", handle_quit};
 void normal_init()
 {
 
-    HASH_ADD_KEYPTR(hh, normal_mode.keymap, quit.key, strlen(quit.key), &quit);
+    // HASH_ADD_KEYPTR(hh, normal_mode.keymap, quit.key, strlen(quit.key), &quit);
 
+    vec_push(&normal_mode.keybindings, quit);
     vec_push(&editor.modes, normal_mode);
     int idx;
     editor_mode_lookup("normal", &idx);
