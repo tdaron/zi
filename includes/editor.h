@@ -30,7 +30,6 @@ Mode* editor_mode_lookup(char* name, int* idx);
 bool editor_switch_mode(char* name);
 bool editor_bind_key(char* name, KeyBinding binding);
 
-
 typedef struct KeyBinding{
     const char* key;
     KEYBIND_HANDLER handler;

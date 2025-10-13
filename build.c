@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
 #define NOB_IMPLEMENTATION
 #include "includes/nob.h"
 
@@ -18,195 +19,190 @@ typedef struct {
     size_t capacity;
 } Plugins;
 
-Plugins plugins = { 0 };
+static Plugins plugins = { 0 };
+static bool rebuild_everything = false;
+static bool updated_something = false;
 
-const char* compile_object_async(Nob_Procs* procs, const char* source_path)
+// --------------------------------------------------------
+// Helpers
+// --------------------------------------------------------
+
+
+static bool includes_newer_than(const char* target)
 {
-    const char* source_filename = nob_path_name(source_path);
-    const char* last_dot = strrchr(source_filename, '.');
-    size_t base_name_len = (last_dot == NULL) ? strlen(source_filename) : (size_t)(last_dot - source_filename);
+    Nob_File_Paths headers = { 0 };
+    bool newer = false;
 
-    Nob_String_View base_name = nob_sv_from_parts(source_filename, base_name_len);
-    const char* obj_path = nob_temp_sprintf(OBJ_FOLDER SV_Fmt ".o", SV_Arg(base_name));
+    if (nob_read_entire_dir("includes", &headers)) {
+        for (size_t i = 0; i < headers.count; i++) {
+            char* name = nob_temp_sprintf("includes/%s", headers.items[i]);
+            if (strcmp(name, "includes/generated_plugins.h") == 0) continue;
+            if (nob_needs_rebuild1(target, name)) {
+                newer = true;
+                break;
+            }
+        }
+    }
+    nob_da_free(headers);
+    return newer;
+}
 
-    if (!nob_needs_rebuild1(obj_path, source_path)) {
-        nob_log(NOB_INFO, "%s is up to date.", (obj_path));
-        return obj_path;
+
+static const char* compile_object_async(Nob_Procs* procs, const char* src)
+{
+    const char* name = nob_path_name(src);
+    const char* dot = strrchr(name, '.');
+    size_t len = dot ? (size_t)(dot - name) : strlen(name);
+    Nob_String_View base = nob_sv_from_parts(name, len);
+    const char* obj = nob_temp_sprintf(OBJ_FOLDER SV_Fmt ".o", SV_Arg(base));
+
+    if (!nob_needs_rebuild1(obj, src) && !rebuild_everything) {
+        nob_log(NOB_INFO, "%s up to date", obj);
+        return obj;
     }
 
     Nob_Cmd cmd = { 0 };
-    nob_cmd_append(&cmd, "gcc");
-    nob_cmd_append(&cmd, "-c");
+    nob_cmd_append(&cmd, "gcc", "-c");
     nob_cc_flags(&cmd);
-    nob_cc_inputs(&cmd, source_path);
-    nob_cmd_append(&cmd, "-g", "-Iincludes", "-Iconfig");
-    nob_cmd_append(&cmd, "-Wno-missing-braces");
-    nob_cc_output(&cmd, obj_path);
-
+    nob_cc_inputs(&cmd, src);
+    nob_cmd_append(&cmd, "-g", "-Iincludes", "-Iconfig", "-Wno-missing-braces");
+    nob_cc_output(&cmd, obj);
     nob_cmd_run(&cmd, .async = procs);
-    return obj_path;
+    updated_something = true;
+    return obj;
 }
 
-void link_executable(const char* output_path, const char* main_obj, Nob_File_Paths common_objs)
+static void link_executable(const char* out, const char* main_obj, Nob_File_Paths objs)
 {
     Nob_Cmd cmd = { 0 };
     nob_cc(&cmd);
-
-    nob_cmd_append(&cmd, main_obj);
-    nob_cmd_append(&cmd, OBJ_FOLDER "clay.o");
-    nob_da_append_many(&cmd, common_objs.items, common_objs.count);
+    nob_cmd_append(&cmd, main_obj, OBJ_FOLDER "clay.o");
+    nob_da_append_many(&cmd, objs.items, objs.count);
     for (size_t i = 0; i < plugins.count; i++)
         nob_da_append(&cmd, plugins.items[i].obj_name);
+    nob_cc_output(&cmd, out);
 
-    nob_cc_output(&cmd, output_path);
-
+    updated_something = true;
     if (!nob_cmd_run(&cmd)) {
-        nob_log(NOB_ERROR, "Failed to link executable: %s", output_path);
+        nob_log(NOB_ERROR, "Link failed: %s", out);
         exit(1);
     }
-    printf("[DONE] %s linked! \n", output_path);
+    printf("[DONE] Linked %s\n", out);
 }
 
-bool isFile(char* name)
-{
-    int i = 0;
-    while (name[i] != '\0') {
-        if (name[i] == '.')
-            return true;
-        i++;
-    }
-    return false;
-}
+static bool is_file(const char* name) { return strchr(name, '.') != NULL; }
 
-void compile_plugins_from_dir(char* name, Nob_Procs* procs)
+// --------------------------------------------------------
+// Plugin Compilation
+// --------------------------------------------------------
+
+static void compile_plugins_from_dir(const char* dir, Nob_Procs* procs)
 {
-    nob_log(NOB_INFO, "Reading plugins from %s", name);
+    nob_log(NOB_INFO, "Reading plugins from %s", dir);
     Nob_File_Paths children = { 0 };
-    if (nob_read_entire_dir(name, &children)) {
-        for (size_t i = 0; i < children.count; i++) {
-            char* child_name = (char*)children.items[i];
-            if (strcasecmp(child_name, ".") == 0)
-                continue;
-            if (strcasecmp(child_name, "..") == 0)
-                continue;
+    if (!nob_read_entire_dir(dir, &children))
+        return;
 
-            if (child_name[0] == '_') {
-                continue;
-            }
-            char* full_path = malloc(strlen(name) + 1 + strlen(child_name));
-            sprintf(full_path, "%s/%s", name, child_name);
-            if (!isFile(child_name)) {
-                compile_plugins_from_dir(full_path, procs);
-            } else {
-                nob_log(NOB_INFO, "Compiling %s", full_path);
-                const char* outputObj = compile_object_async(procs, full_path);
-                Plugin p = { 0 };
-                p.plugin_name = child_name;
-                p.obj_name = (char*)outputObj;
-                p.plugin_name_length = strlen(child_name) - 2;
-                nob_da_append(&plugins, p);
-            }
-            free(full_path);
+    for (size_t i = 0; i < children.count; i++) {
+        const char* child = children.items[i];
+        if (!strcmp(child, ".") || !strcmp(child, "..") || child[0] == '_')
+            continue;
+
+        const char* path = nob_temp_sprintf("%s/%s", dir, child);
+        if (is_file(child)) {
+            nob_log(NOB_INFO, "Compiling %s", path);
+            const char* obj = compile_object_async(procs, path);
+            Plugin p = {
+                .obj_name = (char*)obj,
+                .plugin_name = (char*)child,
+                .plugin_name_length = (int)(strlen(child) - 2),
+            };
+            nob_da_append(&plugins, p);
+        } else {
+            compile_plugins_from_dir((char*)path, procs);
         }
     }
 }
 
-void generate_plugins_header_file()
+static void generate_plugins_header(void)
 {
-    FILE* header = fopen("./includes/generated_plugins.h", "w");
-    fprintf(header, "// DO NOT EDIT THIS FILE. IT IS AUTOMATICALLY GENERATED BY THE BUILD SYSTEM\n");
-    fprintf(header, "typedef void (*PluginInitFunction)();\n");
-    fprintf(header, "#define PLUGINS_COUNT %ld\n", plugins.count);
+    FILE* f = fopen("./includes/generated_plugins.h", "w");
+    fprintf(f, "// auto-generated by build.c\n");
+    fprintf(f, "typedef void (*PluginInitFunction)();\n");
+    fprintf(f, "#define PLUGINS_COUNT %zu\n", plugins.count);
+
     for (size_t i = 0; i < plugins.count; i++) {
         Plugin* p = &plugins.items[i];
-        fprintf(header, "void %.*s_init();\n", p->plugin_name_length, p->plugin_name);
-        fprintf(header, "void %.*s_apply();\n", p->plugin_name_length, p->plugin_name);
+        fprintf(f, "void %.*s_init();\n", p->plugin_name_length, p->plugin_name);
+        fprintf(f, "void %.*s_apply();\n", p->plugin_name_length, p->plugin_name);
     }
-    fprintf(header, "PluginInitFunction pluginsInitFunctions[] = {\n");
-    for (size_t i = 0; i < plugins.count; i++) {
-        Plugin* p = &plugins.items[i];
-        fprintf(header, "%.*s_init,\n", p->plugin_name_length, p->plugin_name);
-    }
-    fprintf(header, "};\n");
-    fprintf(header, "PluginInitFunction pluginsApplyFunctions[] = {\n");
-    for (size_t i = 0; i < plugins.count; i++) {
-        Plugin* p = &plugins.items[i];
-        fprintf(header, "%.*s_apply,\n", p->plugin_name_length, p->plugin_name);
-    }
-    fprintf(header, "};\n");
-    fclose(header);
+
+    fprintf(f, "PluginInitFunction pluginsInitFunctions[] = {\n");
+    for (size_t i = 0; i < plugins.count; i++)
+        fprintf(f, "%.*s_init,\n", plugins.items[i].plugin_name_length, plugins.items[i].plugin_name);
+    fprintf(f, "};\nPluginInitFunction pluginsApplyFunctions[] = {\n");
+    for (size_t i = 0; i < plugins.count; i++)
+        fprintf(f, "%.*s_apply,\n", plugins.items[i].plugin_name_length, plugins.items[i].plugin_name);
+    fprintf(f, "};\n");
+    fclose(f);
 }
+
+
+// --------------------------------------------------------
+// Main build
+// --------------------------------------------------------
 
 int main(int argc, char** argv)
 {
     NOB_GO_REBUILD_URSELF(argc, argv);
-
     nob_mkdir_if_not_exists(DIST_FOLDER);
     nob_mkdir_if_not_exists(OBJ_FOLDER);
-    nob_log(NOB_INFO, "Compiling source files...");
 
     Nob_Procs procs = { 0 };
+    Nob_File_Paths common_objs = { 0 };
+
+    // clay.o build
     if (nob_needs_rebuild1(OBJ_FOLDER "clay.o", "includes/clay.h")) {
         Nob_Cmd cmd = { 0 };
         nob_cc(&cmd);
-        nob_cmd_append(&cmd, "-c");
-        nob_cmd_append(&cmd, "-x", "c");
-        nob_cmd_append(&cmd, "-O3");
-        nob_cmd_append(&cmd, "-DCLAY_IMPLEMENTATION");
+        nob_cmd_append(&cmd, "-c", "-x", "c", "-O3", "-DCLAY_IMPLEMENTATION");
         nob_cc_inputs(&cmd, "includes/clay.h");
         nob_cc_output(&cmd, OBJ_FOLDER "clay.o");
         nob_cmd_run(&cmd, .async = &procs);
+        updated_something = true;
     } else {
-        nob_log(NOB_INFO, OBJ_FOLDER "clay.o is up to date.");
+        nob_log(NOB_INFO, OBJ_FOLDER "clay.o up to date.");
     }
 
-    Nob_File_Paths common_objs = { 0 };
+    rebuild_everything = includes_newer_than(OBJ_FOLDER "main.o");
 
-    const char* common_sources[] = {
-        "src/termgfx.c",
-        "src/buffer.c",
-        "src/renderer.c",
-        "src/layout.c",
-        "src/editor.c",
-        "src/utf8.c",
-        "src/io.c",
-        "src/vec.c"
-    };
+    const char* sources[] = { "src/termgfx.c", "src/buffer.c", "src/renderer.c", "src/layout.c", "src/editor.c",
+        "src/utf8.c", "src/io.c", "src/vec.c" };
 
-    for (size_t i = 0; i < NOB_ARRAY_LEN(common_sources); ++i) {
-        const char* obj_path = compile_object_async(&procs, common_sources[i]);
-        nob_da_append(&common_objs, obj_path);
-    }
+    for (size_t i = 0; i < NOB_ARRAY_LEN(sources); i++)
+        nob_da_append(&common_objs, compile_object_async(&procs, sources[i]));
 
-    const char* tests_obj_path = compile_object_async(&procs, "tests/main_tests.c");
+    const char* tests_obj = compile_object_async(&procs, "tests/main_tests.c");
 
     nob_log(NOB_INFO, "Compiling plugins...");
     compile_plugins_from_dir("plugins", &procs);
+    generate_plugins_header();
+
+    const char* main_obj = compile_object_async(&procs, "src/main.c");
 
     if (!nob_procs_wait(procs)) {
-        nob_log(NOB_ERROR, "A compilation command failed.");
+        nob_log(NOB_ERROR, "A compilation failed.");
         return 1;
     }
 
-    generate_plugins_header_file();
-
-    Nob_Cmd cmd = { 0 };
-    nob_cmd_append(&cmd, "gcc");
-    nob_cmd_append(&cmd, "-c");
-    nob_cc_flags(&cmd);
-    nob_cc_inputs(&cmd, "src/main.c");
-    nob_cmd_append(&cmd, "-g", "-Iincludes", "-Iconfig");
-    nob_cmd_append(&cmd, "-Wno-missing-braces");
-    nob_cc_output(&cmd, "dist/obj/main.o");
-    nob_cmd_run(&cmd);
-
-    nob_log(NOB_INFO, "All source files compiled successfully.");
-    nob_log(NOB_INFO, "Linking executables...");
-    link_executable("dist/main", "dist/obj/main.o", common_objs);
-    link_executable("dist/tests", tests_obj_path, common_objs);
-
+    nob_log(NOB_INFO, "Linking...");
+    if (updated_something) {
+        link_executable("dist/main", main_obj, common_objs);
+        link_executable("dist/tests", tests_obj, common_objs);
+    } else {
+        nob_log(NOB_INFO, "No need to link. Nothing changed.");
+    }
     nob_da_free(procs);
     nob_da_free(common_objs);
-
     return 0;
 }
