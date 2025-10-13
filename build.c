@@ -163,6 +163,7 @@ int main(int argc, char** argv)
         "src/editor.c",
         "src/utf8.c",
         "src/io.c",
+        "src/vec.c"
     };
 
     for (size_t i = 0; i < NOB_ARRAY_LEN(common_sources); ++i) {
