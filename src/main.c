@@ -13,13 +13,21 @@ Editor editor = {0};
 
 int main()
 {
+
     setlocale(LC_ALL, "en_US.UTF-8");
     log_init();
     log_print(LOG_INFO, "zi is booting...");
 
+    editor_init(&editor);
+
     for (int i = 0; i < PLUGINS_COUNT; i++) {
         pluginsInitFunctions[i]();
     }
+    for (int i = 0; i < PLUGINS_COUNT; i++) {
+        pluginsApplyFunctions[i]();
+    }
+
+    log_print(LOG_INFO, "Default mode: %s", editor.modes.data[0].name);
     
     init_renderer();
     log_print(LOG_INFO, "zi is set up !");

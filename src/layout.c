@@ -32,9 +32,8 @@ void statusBar()
     CLAY({ .backgroundColor = STATUS_COLOR,
         .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) }, .childGap = 2 } })
     {
-        Clay_String ins = CLAY_STRING("INS");
-        Clay_String nor = CLAY_STRING("NOR");
-        Clay_String s = editor.mode == INSERT_MODE ? ins : nor;
+        char* mode_name = editor.modes.data[editor.current_mode].short_name;
+        Clay_String s = {.length = strlen(mode_name), .chars = mode_name, .isStaticallyAllocated=false};
         CLAY_TEXT(s, CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
         char* n = editor.views[editor.currentView].buffer->name;
         Clay_String name = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
@@ -46,24 +45,18 @@ void statusBar()
     }
 }
 
-
-
 void bottomline()
 {
     CLAY({ .layout = { .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(1) } } })
     {
-        if (editor.mode == INPUT_MODE) {
-            Clay_String input = {
-                .isStaticallyAllocated = true,
-                .chars = editor.userInput.input,
-                .length = editor.userInput.length
-            };
+        // if (editor.mode == INPUT_MODE) {
+        //     Clay_String input
+        //         = { .isStaticallyAllocated = true, .chars = editor.userInput.input, .length = editor.userInput.length };
 
-            CLAY_TEXT(SV_TO_CLAY(editor.userInput.prefix), CLAY_TEXT_CONFIG({.textColor = ACTIVE_BUFFER}));
-            CLAY_TEXT(input, CLAY_TEXT_CONFIG({.textColor = ACTIVE_BUFFER}));
+        //     CLAY_TEXT(SV_TO_CLAY(editor.userInput.prefix), CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
+        //     CLAY_TEXT(input, CLAY_TEXT_CONFIG({ .textColor = ACTIVE_BUFFER }));
 
-        }
-        else if (editor.message != 0) {
+        if (editor.message != 0) {
             char* n = editor.message;
             Clay_String message = { .length = strlen(n), .chars = n, .isStaticallyAllocated = true };
 

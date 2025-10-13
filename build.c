@@ -120,11 +120,18 @@ void generate_plugins_header_file()
     for (size_t i = 0; i < plugins.count; i++) {
         Plugin* p = &plugins.items[i];
         fprintf(header, "void %.*s_init();\n", p->plugin_name_length, p->plugin_name);
+        fprintf(header, "void %.*s_apply();\n", p->plugin_name_length, p->plugin_name);
     }
     fprintf(header, "PluginInitFunction pluginsInitFunctions[] = {\n");
     for (size_t i = 0; i < plugins.count; i++) {
         Plugin* p = &plugins.items[i];
         fprintf(header, "%.*s_init,\n", p->plugin_name_length, p->plugin_name);
+    }
+    fprintf(header, "};\n");
+    fprintf(header, "PluginInitFunction pluginsApplyFunctions[] = {\n");
+    for (size_t i = 0; i < plugins.count; i++) {
+        Plugin* p = &plugins.items[i];
+        fprintf(header, "%.*s_apply,\n", p->plugin_name_length, p->plugin_name);
     }
     fprintf(header, "};\n");
     fclose(header);
