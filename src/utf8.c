@@ -5,7 +5,7 @@
 // as it can consume a variable number of chars.
 
 // Get chars from stdin (user input)
-int getchar_provider(void* _) { return getchar(); }
+int getchar_provider(void* _) { (void)_; return getchar(); }
 
 // Get chars from a buffer
 int buffer_provider(void* d)

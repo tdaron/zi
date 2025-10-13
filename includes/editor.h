@@ -11,14 +11,29 @@
 #include <sv.h>
 #include <vec.h>
 
+typedef struct Editor Editor;
+typedef struct KeyBinding KeyBinding;
 typedef struct Mode Mode;
 typedef void (*CALLBACK_FN)(String_View input);
-typedef void (*EVENT_HANDLER)(Mode* mode, tg_event* ev);
+typedef bool (*EVENT_HANDLER)(Mode* mode, tg_event* ev);
+typedef void (*KEYBIND_HANDLER)(Mode* mode, tg_event* ev);
 
 
-typedef struct {
+void editor_new_view(Buffer* buf);
+void editor_set_current_view(int view_id);
+void free_editor();
+void editor_next_buffer();
+void editor_handle_event(tg_event* event);
+void editor_input_mode(String_View prefix, CALLBACK_FN callback);
+void editor_init(Editor* editor);
+Mode* editor_mode_lookup(char* name, int* idx);
+bool editor_switch_mode(char* name);
+bool editor_bind_key(char* name, KeyBinding binding);
+
+
+typedef struct KeyBinding{
     const char* key;
-    EVENT_HANDLER handler;
+    KEYBIND_HANDLER handler;
 } KeyBinding;
 
 typedef vec_t(KeyBinding) keybinding_vec_t;
@@ -30,6 +45,8 @@ typedef struct Mode {
     keybinding_vec_t keybindings;
 } Mode;
 
+#define DEFINE_MODE(NAME, SHORT, HANDLER) (Mode){NAME, SHORT, HANDLER, {0}}
+
 typedef vec_t(Mode) mode_vec_t;
 
 
@@ -39,10 +56,9 @@ typedef struct {
     char input[256];
     int  length;
     CALLBACK_FN callback;
-    
 } UserInput;
 
-typedef struct {
+typedef struct Editor {
     // TODO: Either make a DA or a linked list
     View views[10];
     int viewsCount;
@@ -58,12 +74,4 @@ typedef struct {
 
 extern Editor editor;
 
-void editor_new_view(Buffer* buf);
-void editor_set_current_view(int view_id);
-void free_editor();
-void editor_next_buffer();
-void editor_handle_event(tg_event* event);
-void editor_input_mode(String_View prefix, CALLBACK_FN callback);
-void editor_init(Editor* editor);
-Mode* editor_mode_lookup(char* name, int* idx);
 #endif
