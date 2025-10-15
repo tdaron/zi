@@ -79,13 +79,10 @@ void tg_draw_box(int x, int y, int w, int h, char c)
         }
     }
 }
-int tg_print_text(int x, int y, const char* s)
-{
-    return tg_print_text_with_length(x, y, s, strlen(s));
-}
+int tg_print_text(int x, int y, const char* s) { return tg_print_text_with_length(x, y, s, strlen(s)); }
 int tg_print_text_with_length(int x, int y, const char* s, int length)
 {
-    bufferProviderData data = {s, 0};
+    bufferProviderData data = { s, 0 };
     char buf[4];
     int i = 0;
     while (data.pos < length) {
@@ -162,6 +159,13 @@ void tg_enable_raw(void)
     tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 }
 void tg_disable_raw(void) { tcsetattr(STDIN_FILENO, TCSANOW, &tg_old_termios); }
+void tg_free()
+{
+    if (framebuffer)
+        free(framebuffer);
+    if (backbuffer)
+        free(backbuffer);
+}
 
 // --- Terminal size ---
 void tg_update_size(void)
@@ -169,10 +173,7 @@ void tg_update_size(void)
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0) {
         if (ws.ws_col != tg_term_w || ws.ws_row != tg_term_h) {
-            if (framebuffer)
-                free(framebuffer);
-            if (backbuffer)
-                free(backbuffer);
+            tg_free();
             backbuffer = calloc(ws.ws_col * ws.ws_row, sizeof(Cell));
             framebuffer = calloc(ws.ws_col * ws.ws_row, sizeof(Cell));
         }
@@ -182,18 +183,6 @@ void tg_update_size(void)
 }
 int tg_width(void) { return tg_term_w; }
 int tg_height(void) { return tg_term_h; }
-
-// optional: call in main to auto-update on SIGWINCH
-static void tg_handle_winch(int sig)
-{
-    (void)sig;
-    tg_update_size();
-}
-void tg_install_winch_handler(void)
-{
-    signal(SIGWINCH, tg_handle_winch);
-    tg_update_size();
-}
 
 // --- Input ---
 int tg_getch(void) { return getchar(); }

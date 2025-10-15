@@ -70,8 +70,8 @@ void init_renderer()
     tg_enable_raw();
     tg_set_nonblocking(1);
     tg_cursor_hide();
-    tg_install_winch_handler();
     tg_mouse_enable();
+    tg_update_size();
 }
 
 void quit_renderer()
@@ -81,6 +81,7 @@ void quit_renderer()
     tg_disable_raw();
     tg_alt_screen_disable();
     tg_cursor_show();
+    tg_free();
 }
 
 int renderer_width() { return tg_width(); }

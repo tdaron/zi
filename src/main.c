@@ -42,8 +42,9 @@ int main()
         }
     }
     quit_renderer();
+    layout_free();
     log_print(LOG_INFO, "goodbye !");
-    free_editor(&editor);
+    free_editor();
 
     return 0;
 }

@@ -76,6 +76,7 @@ int tg_print_text_with_length(int x, int y, const char* s, int length);
 
 
 
+void tg_free();
 void tg_flush();
 
 // --- Raw mode ---
@@ -86,7 +87,6 @@ void tg_disable_raw(void);
 void tg_update_size(void);
 int tg_width(void);
 int tg_height(void);
-void tg_install_winch_handler(void);
 
 // --- Input ---
 int tg_getch(void);

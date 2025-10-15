@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+char* clayMemory;
+
 void buffersBar()
 {
 
@@ -103,11 +105,18 @@ Clay_Dimensions MeasureText(Clay_StringSlice text, Clay_TextElementConfig* confi
 
 void layout_init(int screenWidth, int screenHeight)
 {
+    Clay_SetMaxMeasureTextCacheWordCount(0); // Dont need much
+    Clay_SetMaxElementCount(256); // Dont need much.
     uint64_t totalMemorySize = Clay_MinMemorySize();
-    Clay_Arena arena = Clay_CreateArenaWithCapacityAndMemory(totalMemorySize, malloc(totalMemorySize));
+    clayMemory = malloc(totalMemorySize);
+    Clay_Arena arena = Clay_CreateArenaWithCapacityAndMemory(totalMemorySize, clayMemory);
     Clay_Initialize(
         arena, (Clay_Dimensions) { screenWidth, screenHeight }, (Clay_ErrorHandler) { HandleClayErrors, NULL });
     Clay_SetMeasureTextFunction(MeasureText, NULL);
+}
+
+void layout_free() {
+    free(clayMemory);
 }
 
 void layout_set_dimension(int width, int height) { Clay_SetLayoutDimensions((Clay_Dimensions) { width, height }); }

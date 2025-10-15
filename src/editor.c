@@ -1,4 +1,5 @@
 #include "termgfx.h"
+#include "vec.h"
 #include <editor.h>
 #include <io.h>
 #include <string.h>
@@ -16,6 +17,7 @@ bool editor_switch_mode(char* name)
     } else
         return false;
 }
+
 bool editor_bind_key(char* name, KeyBinding binding)
 {
 
@@ -49,6 +51,10 @@ void free_editor()
         //  on the same buffer.
         free_buffer(editor.views[i].buffer);
     }
+    for (int i = 0; i < editor.modes.length; i++) {
+        vec_deinit(&(editor.modes.data[i].keybindings));
+    }
+    vec_deinit(&editor.modes);
     log_close();
 }
 void editor_next_buffer() { editor.currentView = (editor.currentView + 1) % editor.viewsCount; }
